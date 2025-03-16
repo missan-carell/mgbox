@@ -1,3 +1,97 @@
+# MGBox
+### 部署示例
+1. 部署服务器
+```
+docker-compose up -d
+docker-compose exec -it mgbox bash
+
+cat /var/log/mgbox.log 
+cat /var/log/mgbox_init.log 
+ssh mgbox@mgbox
+The authenticity of host 'mgbox (172.18.0.3)' can't be established.
+ECDSA key fingerprint is SHA256:zYUSLjthI1R2zZSujXrEchyPt5AptHqUE2NdJ0wt0s0.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added 'mgbox,172.18.0.3' (ECDSA) to the list of known hosts.
+   __       __   ______    ______   ______   ______         _______    ______   __    __ 
+  /  \     /  | /      \  /      \ /      | /      \       /       \  /      \ /  |  /  |
+  $$  \   /$$ |/$$$$$$  |/$$$$$$  |$$$$$$/ /$$$$$$  |      $$$$$$$  |/$$$$$$  |$$ |  $$ |
+  $$$  \ /$$$ |$$ |__$$ |$$ | _$$/   $$ |  $$ |  $$/       $$ |__$$ |$$ |  $$ |$$  \/$$/ 
+  $$$$  /$$$$ |$$    $$ |$$ |/    |  $$ |  $$ |            $$    $$< $$ |  $$ | $$  $$<  
+  $$ $$ $$/$$ |$$$$$$$$ |$$ |$$$$ |  $$ |  $$ |   __       $$$$$$$  |$$ |  $$ |  $$$$  \ 
+  $$ |$$$/ $$ |$$ |  $$ |$$ \__$$ | _$$ |_ $$ \__/  |      $$ |__$$ |$$ \__$$ | $$ /$$  |
+  $$ | $/  $$ |$$ |  $$ |$$    $$/ / $$   |$$    $$/       $$    $$/ $$    $$/ $$ |  $$ |
+  $$/      $$/ $$/   $$/  $$$$$$/  $$$$$$/  $$$$$$/        $$$$$$$/   $$$$$$/  $$/   $$/ 
+
+  MAGIC KEY BOX by lihao@lidai
+
+Press Enter key to login system
+Username: test1
+Password: 
+Welcome test1, login success!
+
+=== MGBOX Client Managerment System ===
+Operation Menu:
+  1. Device management
+  2. Device user management
+  3. List device and users
+  x. Exit sub menu
+  X. Exit system
+Choose your Operation: 1
+2025-03-16T11:19:49Z [getop_from_menu]: Notice: User 'test1' operation: 1. Device management
+
+
+=== MGBOX Client Managerment :: Devices Managerment System ===
+User: test1
+Operation Menu:
+  1. List device
+  2. Add new device
+  3. Update device description
+  4. Delete device
+  x. Exit sub menu
+  X. Exit system
+Choose your Operation: 1
+2025-03-16T11:19:51Z [getop_from_menu]: Notice: User 'test1' operation: 1. List device
+
++-------------+------------------+------------------+---------------------+---------------------+-------------+
+| device_name | install_token    | access_token     | created_at          | last_modified       | description |
++-------------+------------------+------------------+---------------------+---------------------+-------------+
+| vm1         | M2YxYTg5MmU1Mzg5 | YzgxNjcwZjNjMDRi | 2025-03-16 11:17:14 | 2025-03-16 11:17:14 | DC shanghai |
+| vm2         | ZWYxOTQ3ZDFhYTgw | YTYyNGJlMTcyNDAw | 2025-03-16 11:17:14 | 2025-03-16 11:17:14 | DC Hangzhou |
++-------------+------------------+------------------+---------------------+---------------------+-------------+
+```
+
+2. 部署客户端
+```
+docker-compose exec -it mgbox bash
+root@singa16# curl 'http://mgbox:80/install?install_token=M2YxYTg5MmU1Mzg5' | bash -
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100  8269    0  8269    0     0  90868      0 --:--:-- --:--:-- --:--:-- 90868
+2025-03-16T11:21:58Z [setup_sanity_check]: Notice: Checking sanity ...
+2025-03-16T11:21:58Z [mgbox_client_config]: Notice: Setting up mgbox client config ...
+2025-03-16T11:21:58Z [setup_mgbox_client_script]: Notice: Setting up mgbox client script ...
+2025-03-16T11:21:58Z [setup_mgbox_client_service]: Notice: Setting up mgbox client service ...
+Created symlink /etc/systemd/system/multi-user.target.wants/mgboxc.service → /etc/systemd/system/mgboxc.service.
+2025-03-16T11:21:58Z [main]: Notice: mgbox client setup done.
+root@vm3:/# 
+root@vm3:/# 
+root@vm3:/# cat /var/log/mgbox.log 
+2025-03-16T11:21:58Z [setup_sanity_check]: Notice: Checking sanity ...
+2025-03-16T11:21:58Z [mgbox_client_config]: Notice: Setting up mgbox client config ...
+2025-03-16T11:21:58Z [setup_mgbox_client_script]: Notice: Setting up mgbox client script ...
+2025-03-16T11:21:58Z [setup_mgbox_client_service]: Notice: Setting up mgbox client service ...
+2025-03-16T11:21:58Z [main]: Notice: mgbox client setup done.
+2025-03-16T11:21:58Z [parse_config]: Info MGBOX_SERVER_URL="http://mgbox:80/account?username=test1&device_name=vm1&access_token=YzgxNjcwZjNjMDRi"
+2025-03-16T11:21:58Z [mgboxc_pull_account]: Notice: mgboxc_pull_account ...
+2025-03-16T11:21:58Z [mgboxc_pull_account]: Info HTTP/1.1 200 OK
+2025-03-16T11:21:58Z [parse_http_response]: Info Parsing HTTP response...
+2025-03-16T11:21:58Z [parse_http_response]: Info Device: vm1, User: lihao, LastModify: 1742123834.
+2025-03-16T11:21:58Z [parse_http_response]: Notice: Add new user lihao ...
+2025-03-16T11:21:59Z [parse_http_response]: Info Device: vm1, User: missan, LastModify: 1742123834.
+2025-03-16T11:21:59Z [parse_http_response]: Notice: Add new user missan ...
+
+```
+
 ### 数据流图 (DFD)
 
 #### 1. **上下文图 (Context Diagram)**
@@ -123,3 +217,4 @@ MGBox 系统实现了用户管理、设备管理和 HTTP 接口的功能，整�
 
 
 ~ tonglingyimang ~
+
