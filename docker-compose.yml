@@ -1,0 +1,78 @@
+
+services:
+### Services in LWAN ########
+  database:
+    hostname: database
+    image: mariadb
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MARIADB_USER=mgbox
+      - MARIADB_PASSWORD=mgbox
+      - MARIADB_DATABASE=mgbox
+    networks: 
+      - lan
+
+  mgbox: 
+    hostname: mgbox
+    image: missancarell/mgbox:v0.1
+    privileged: true
+    command: init
+    post_start:
+      - command: /bin/sh -c "/usr/mgbox/mgbox_init.sh"
+        privileged: true
+    networks: 
+      - lan
+      - wan
+    
+### Tester in WAN ########
+  tester: 
+    hostname: tester
+    image: missancarell/mgbox:v0.1
+    command: /bin/sh -c "while true; do sleep 10; done"
+    depends_on:
+      - mgbox
+    networks:
+      - wan
+
+### VMs in WAN ########
+  vm1: 
+    hostname: vm1
+    image: missancarell/ubuntu:v0.1
+    privileged: true
+    depends_on:
+      - mgbox
+    networks: 
+      - wan
+  vm2: 
+    hostname: vm2
+    image: missancarell/ubuntu:v0.1
+    privileged: true
+    command: init
+    depends_on:
+      - mgbox
+    networks: 
+      - wan
+  vm3: 
+    hostname: vm3
+    image: missancarell/ubuntu:v0.1
+    privileged: true
+    command: init
+    depends_on:
+      - mgbox
+    networks: 
+      - wan
+  vm4: 
+    hostname: vm4
+    image: missancarell/ubuntu:v0.1
+    privileged: true
+    command: init
+    depends_on:
+      - mgbox
+    networks: 
+      - wan
+
+networks:
+  lan:
+    driver: macvlan
+  wan:
+    driver: macvlan

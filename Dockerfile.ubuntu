@@ -1,0 +1,15 @@
+# docker build -t missancarell/ubuntu:v0.1 -f Dockerfile.ubuntu .
+FROM ubuntu:20.04
+RUN apt-get update && \
+    apt-get install -y \
+        apt-utils iproute2 iputils-ping net-tools dnsutils \
+        vim unzip lrzsz tcpdump lsof systemd firewalld \
+        sudo wget curl telnet gawk ncat \
+        openssh-server
+
+# Configure mgbox
+# 1. Setup time zone
+RUN cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+
+# Startup with systemd
+CMD ["/sbin/init"]
