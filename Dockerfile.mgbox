@@ -1,4 +1,4 @@
-# docker build -t missancarell/mgbox:v0.1 -f Dockerfile.mgbox .
+# 
 FROM ubuntu:20.04
 RUN apt-get update && \
     apt-get install -y \
@@ -9,26 +9,35 @@ RUN apt-get update && \
 
 # Configure mgbox
 # 1. Setup time zone
-# 2. Add mgbox account
-# 3. Share public key to client VM device
-# 4. Limit ssh access on mgbox server
-# 5. Create mgcli
+# 2. Create mgcli
+# 3. Add mgbox account
 RUN cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
-    useradd -m -s /bin/bash -p 'mgbox#123' mgbox && \
-    ssh-keygen -t ecdsa -f ~/.ssh/id_ecdsa -N '' && \
-    su mgbox -c 'mkdir -p ~/.ssh' && \
-    echo "command=\"/usr/mgbox/mgbox_cli.sh\" $(cat ~/.ssh/id_ecdsa.pub)" >> /home/mgbox/.ssh/authorized_keys && \
-    chown mgbox:mgbox /home/mgbox/.ssh/authorized_keys && \
-    chmod 600 /home/mgbox/.ssh/authorized_keys && \
     echo 'ssh -o StrictHostKeyChecking=no -o CheckHostIP=no mgbox@mgbox' > /usr/bin/mgcli && \
-    chmod a+x /usr/bin/mgcli
+    chmod a+x /usr/bin/mgcli && \
+    useradd -m -s /bin/bash mgbox && passwd -d mgbox && \
+    cat >> /etc/ssh/sshd_config <<EOF
+Match User mgbox
+    PasswordAuthentication yes
+    PermitEmptyPasswords yes
+     X11Forwarding no
+    AllowTcpForwarding no
+    PermitTTY yes 
+    ForceCommand /usr/mgbox/mgbox_cli.sh
+EOF
+    
+# Add mgbox root CA
+COPY cert/ca.crt            /usr/mgbox/ca.crt
+RUN cat /usr/mgbox/ca.crt >> /etc/ssl/certs/ca-certificates.crt
 
- COPY mgbox_init.sh         /usr/mgbox/mgbox_init.sh
- COPY mgbox_cli.sh          /usr/mgbox/mgbox_cli.sh
- COPY mgbox_server.sh       /usr/mgbox/mgbox_server.sh
- COPY mgbox_client.sh       /usr/mgbox/mgbox_client.sh
- COPY mgbox_client_setup.sh /usr/mgbox/mgbox_client_setup.sh
- COPY utils.sh              /usr/mgbox/utils.sh
+# Add mgbox files
+COPY mgbox_init.sh          /usr/mgbox/mgbox_init.sh
+COPY mgbox_cli.sh           /usr/mgbox/mgbox_cli.sh
+COPY mgbox_server.sh        /usr/mgbox/mgbox_server.sh
+COPY mgbox_client.sh        /usr/mgbox/mgbox_client.sh
+COPY mgbox_client_setup.sh  /usr/mgbox/mgbox_client_setup.sh
+COPY utils.sh               /usr/mgbox/utils.sh
+COPY cert/mgbox.crt         /usr/mgbox/mgbox.crt
+COPY cert/mgbox.key         /usr/mgbox/mgbox.key
 
 # Startup with systemd
 CMD ["/sbin/init"]

@@ -1,4 +1,4 @@
-# docker build -t missancarell/ubuntu:v0.1 -f Dockerfile.ubuntu .
+# docker build -t missancarell/ubuntu:v0.2 -f Dockerfile.ubuntu .
 FROM ubuntu:20.04
 RUN apt-get update && \
     apt-get install -y \
@@ -7,9 +7,15 @@ RUN apt-get update && \
         sudo wget curl telnet gawk ncat \
         openssh-server
 
-# Configure mgbox
+# Configure client
 # 1. Setup time zone
-RUN cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+# 2. Allow PasswordAuthentication
+RUN cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
+    echo "PasswordAuthentication yes">> /etc/ssh/sshd_config
 
+# Add mgbox root CA
+COPY cert/ca.crt            /usr/mgbox/ca.crt
+RUN cat /usr/mgbox/ca.crt >> /etc/ssl/certs/ca-certificates.crt
+    
 # Startup with systemd
 CMD ["/sbin/init"]

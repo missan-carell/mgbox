@@ -70,7 +70,7 @@ mgbox_login() {
 
 # @ opcode
 menu_exit() {
-  local _op=$op && op=                           # clear op
+  local _op=$op && op=                             # clear op
   [ "$_op" = "x" ] && return 254                 # Exit current menu
   [[ "$_op" = "X"  ||  $? = 255 ]] && return 255 # Exit CLI
   return 0
@@ -147,18 +147,23 @@ EOF
 
     elif [ "$op" == "3" ]; then     # Modify user password
       read -t 30 -p "Username: " username || continue
-      read -t 30 -p "Password: " -s passwd || continue 
+      read -t 30 -p "Password: " -s new_passwd || continue 
+      echo
+      read -t 30 -p "Confirm password: " -s confirm_passwd || continue 
       echo
 
       [ -z "$username" ] && logwarn "Username must not be blank!" && continue
-      [ -z "$passwd" ] && logwarn "Password must not be blank!" && continue
+      [ -z "$new_passwd" ] && logwarn "Password must not be blank!" && continue
+      [ "$confirm_passwd" != "$new_passwd" ] && logwarn "Confirm password !" && continue
 
-      data=$(mysql "UPDATE user set password_hash=SHA2('$passwd', 256), last_modified=CURRENT_TIMESTAMP \
-                    WHERE username='$username'");
-      if [ -n "$data" ]; then
-        logerr "Modify user '$username' failed: $data"
-      else
-        lognote "Modify user '$username' success!"
+      # Confirm Modify user password?
+      read -t 30 -p "Are your sure modify password: $username? [Yes|$(white No)] " yesno || continue
+      [[ ! "$yesno" =~ (Y|y) ]] && echo "Your selection is 'no'." && continue
+
+      mysql_exec "UPDATE user set password_hash=SHA2('$new_passwd', 256), last_modified=CURRENT_TIMESTAMP \
+                  WHERE username='$username'";
+      if [ $? = 0 ]; then
+        lognote "Modify user '$username' password success!"
       fi
 
     elif [ "$op" == "4" ]; then     # Delete user
@@ -176,7 +181,7 @@ EOF
       fi
 
     elif [ "$op" == "5" ]; then       # List all device
-      ids="username, device_name, install_token, access_token, created_at, last_modified, description"
+      ids="username, device_name, install_token, created_at, last_modified, description"
       data=$(OP=-te mysql "SELECT $ids FROM user_device_view");
       if [[ "$data" =~ failed|rror ]]; then
         logerr "List device failed: $data"
@@ -210,7 +215,6 @@ Operation Menu:
   4. Delete device user
   5. Refresh device user password
   x. Exit sub menu
-  X. Exit system
 EOF
 )" || return $?
 
@@ -312,13 +316,12 @@ Operation Menu:
   3. Update device description
   4. Delete device
   x. Exit sub menu
-  X. Exit system
 EOF
 )" || return $?
 
     # Handle operation:
     if [ "$op" == "1" ]; then       # List device
-      ids="device_name, install_token, access_token, created_at, last_modified, description"
+      ids="device_name, install_token, created_at, last_modified, description"
       data=$(OP=-te mysql "SELECT $ids FROM user_device_view WHERE username='$CURRENT_USER'");
       if [[ "$data" =~ failed|rror ]]; then
         logerr "List device failed: $data"
@@ -391,7 +394,8 @@ enter_clinet_system() {
 Operation Menu:
   1. $(blue Device management)
   2. $(blue Device user management)
-  3. List device and users
+  3. Modify user password
+  4. List device and users
   x. Exit sub menu
   X. Exit system
 EOF
@@ -415,7 +419,29 @@ EOF
       CURRENT_DEVICE="$device_name" 
       enter_clinet_device_user_management
 
-    elif [ "$op" = "3" ]; then      # List device and users
+    elif [ "$op" == "3" ]; then     # Modify user password
+      read -t 30 -p "Old password: " -s old_passwd || continue
+      echo
+      read -t 30 -p "New password: " -s new_passwd || continue 
+      echo
+      read -t 30 -p "Confirm password: " -s confirm_passwd || continue 
+      echo
+
+      [ -z "$old_passwd" ] && logwarn "Old password must not be blank!" && continue
+      [ -z "$new_passwd" ] && logwarn "New password must not be blank!" && continue
+      [ "$confirm_passwd" != "$new_passwd" ] && logwarn "Confirm password mismatch!" && continue
+
+      # Confirm Modify user password?
+      read -t 30 -p "Are your sure modify password: $CURRENT_USER? [Yes|$(white No)] " yesno || continue
+      [[ ! "$yesno" =~ (Y|y) ]] && echo "Your selection is 'no'." && continue
+
+      mysql_exec "UPDATE user set password_hash=SHA2('$new_passwd', 256), last_modified=CURRENT_TIMESTAMP \
+                  WHERE username='$CURRENT_USER' and password_hash=SHA2('$old_passwd', 256)";
+      if [ $? = 0 ]; then
+        lognote "Modify user '$username' password success!"
+      fi
+
+    elif [ "$op" = "4" ]; then      # List device and users
       read -t 30 -p "Device Name: " device_name || continue 
 
       # Set to list all if not set

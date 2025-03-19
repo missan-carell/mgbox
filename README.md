@@ -1,4 +1,10 @@
 # MGBox
+### 部署客户端
+1. 从 mgbox CLI 获取设备安装令牌（install_token）
+2. 登录客户机，执行如下命令：
+```
+curl https://mgbox/install?install_token=<INSTALL_TOKEN> | bash
+```
 ### 部署示例
 1. 部署服务器
 ```
@@ -63,7 +69,7 @@ Choose your Operation: 1
 2. 部署客户端
 ```
 docker-compose exec -it mgbox bash
-root@singa16# curl 'http://mgbox:80/install?install_token=M2YxYTg5MmU1Mzg5' | bash -
+root@singa16# curl 'https://mgbox/install?install_token=M2YxYTg5MmU1Mzg5' | bash -
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
 100  8269    0  8269    0     0  90868      0 --:--:-- --:--:-- --:--:-- 90868
@@ -81,7 +87,7 @@ root@vm3:/# cat /var/log/mgbox.log
 2025-03-16T11:21:58Z [setup_mgbox_client_script]: Notice: Setting up mgbox client script ...
 2025-03-16T11:21:58Z [setup_mgbox_client_service]: Notice: Setting up mgbox client service ...
 2025-03-16T11:21:58Z [main]: Notice: mgbox client setup done.
-2025-03-16T11:21:58Z [parse_config]: Info MGBOX_SERVER_URL="http://mgbox:80/account?username=test1&device_name=vm1&access_token=YzgxNjcwZjNjMDRi"
+2025-03-16T11:21:58Z [parse_config]: Info MGBOX_SERVER_URL="https://smgbox/account?username=test1&device_name=vm1&access_token=YzgxNjcwZjNjMDRi"
 2025-03-16T11:21:58Z [mgboxc_pull_account]: Notice: mgboxc_pull_account ...
 2025-03-16T11:21:58Z [mgboxc_pull_account]: Info HTTP/1.1 200 OK
 2025-03-16T11:21:58Z [parse_http_response]: Info Parsing HTTP response...
@@ -217,4 +223,3 @@ MGBox 系统实现了用户管理、设备管理和 HTTP 接口的功能，整�
 
 
 ~ tonglingyimang ~
-

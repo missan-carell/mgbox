@@ -14,39 +14,46 @@ services:
 
   mgbox: 
     hostname: mgbox
-    image: missancarell/mgbox:v0.1
+    image: missancarell/mgbox:v0.2
     privileged: true
     command: init
     post_start:
       - command: /bin/sh -c "/usr/mgbox/mgbox_init.sh"
         privileged: true
-    networks: 
+    ports:
+      - 6422:22
+      - 6443:443
+    networks:
       - lan
       - wan
     
-### Tester in WAN ########
-  tester: 
-    hostname: tester
-    image: missancarell/mgbox:v0.1
-    command: /bin/sh -c "while true; do sleep 10; done"
-    depends_on:
-      - mgbox
-    networks:
-      - wan
+# ### Tester in WAN ########
+#   tester: 
+#     hostname: tester
+#     image: missancarell/mgbox:v0.2
+#     command: /bin/sh -c "while true; do sleep 10; done"
+#     depends_on:
+#       - mgbox
+#     networks:
+#       - wan
 
 ### VMs in WAN ########
   vm1: 
     hostname: vm1
-    image: missancarell/ubuntu:v0.1
+    image: missancarell/ubuntu:v0.2
     privileged: true
+    ports:
+      - 6221:22
     depends_on:
       - mgbox
-    networks: 
+    networks:
       - wan
   vm2: 
     hostname: vm2
-    image: missancarell/ubuntu:v0.1
+    image: missancarell/ubuntu:v0.2
     privileged: true
+    ports:
+      - 6222:22
     command: init
     depends_on:
       - mgbox
@@ -54,18 +61,22 @@ services:
       - wan
   vm3: 
     hostname: vm3
-    image: missancarell/ubuntu:v0.1
+    image: missancarell/ubuntu:v0.2
     privileged: true
     command: init
+    ports:
+      - 6223:22
     depends_on:
       - mgbox
     networks: 
       - wan
   vm4: 
     hostname: vm4
-    image: missancarell/ubuntu:v0.1
+    image: missancarell/ubuntu:v0.2
     privileged: true
     command: init
+    ports:
+      - 6224:22
     depends_on:
       - mgbox
     networks: 
@@ -73,6 +84,6 @@ services:
 
 networks:
   lan:
-    driver: macvlan
+    driver: bridge
   wan:
-    driver: macvlan
+    driver: bridge

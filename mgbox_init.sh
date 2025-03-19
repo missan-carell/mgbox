@@ -32,9 +32,13 @@ for i in $(seq 60); do
     sleep 1;
 done
 
+mysql -e "show tables" | grep "device_user"
+[ $? = 0 ] && MGBOX_HAS_INITED=yes
+
 # Initialize `mgbox` database
 lognote "Initialize mgbox database ..."
-mysql -u root -proot -h database <<'EOF'
+if [ ! "$MGBOX_HAS_INITED" = yes ]; then
+  mysql -u root -proot -h database <<'EOF'
     -- Create new database
     CREATE DATABASE IF NOT EXISTS `mgbox`;
     USE `mgbox`;
@@ -125,8 +129,8 @@ mysql -u root -proot -h database <<'EOF'
     CREATE UNIQUE INDEX `device_index` ON `device` (`userid`, `device_name`);
     CREATE UNIQUE INDEX `device_user_index` ON `device_user` (`device_id`, `device_user`);
 EOF
-[ $? != 0 ] && logerr "Prepare database failed." && exit 1
-
+  [ $? != 0 ] && logerr "Prepare database failed." && exit 1
+fi
 
 # Create and start mgbox service
 # It provides HTTP/HTTPs service for remote clients.
@@ -142,7 +146,7 @@ MGBOX_SERVICE='/etc/systemd/system/mgbox.service'
     [Service]
     Type=simple
     EnvironmentFile=
-    ExecStart=/usr/mgbox/mgbox_server.sh --port 80
+    ExecStart=/usr/mgbox/mgbox_server.sh --port 443
     ExecReload=/bin/kill -HUP $MAINPID
     ExecStop=/bin/kill -TERM $MAINPID
     KillMode=process

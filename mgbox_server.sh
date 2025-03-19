@@ -84,10 +84,10 @@ handle_http_request() {
 
     # Verify user login account
     loginfo "username: $username, device_name: $device_name access_token: '$access_token'"
-    data=$(mysql "SELECT username FROM user_device_view \
-                  WHERE username='$username' AND device_name='$device_name'");
     # data=$(mysql "SELECT username FROM user_device_view \
-    #               WHERE username='$username' AND device_name='$device_name' AND access_token='$access_token';");
+    #               WHERE username='$username' AND device_name='$device_name'");
+    data=$(mysql "SELECT username FROM user_device_view \
+                  WHERE username='$username' AND device_name='$device_name' AND access_token='$access_token';");
     if [ ! "$username" = "$data" ]; then
       http_resp_400 "Bad username or access_token"
       return 1
@@ -114,7 +114,7 @@ mgbox_client_config() {
 EOF
       cat <<EOF
 # mgbox client config
-SERVER_URL=${SERVER_URL:-http://mgbox:80}
+SERVER_URL=${SERVER_URL:-https://mgbox}
 USERNAME=$username
 DEVICE_NAME=$device_name
 ACCESS_TOKEN=$access_token
@@ -219,8 +219,9 @@ main() {
     # Start http server
     lognote "Start http server on port $2"
     while true; do
-      # Start http server
-      nc -klp ${2:-7180} -e $0
+      # Start https server
+      local OPTION="--ssl --ssl-cert=/usr/mgbox/mgbox.crt --ssl-key=/usr/mgbox/mgbox.key"
+      nc $OPTION -klp ${2:-7180} -e $0
       sleep 0.1
     done
   else

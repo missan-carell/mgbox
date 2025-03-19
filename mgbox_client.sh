@@ -80,7 +80,7 @@ parse_http_response() {
 mgboxc_pull_account() {
     # Send http request to mgbox server
     lognote "mgboxc_pull_account ..."
-    # MGBOX_SERVER_URL='http://mgbox:80/account?username=test1&access_token=YjgwZDJhMTU5MmZm&device_name=vm1'
+    # MGBOX_SERVER_URL='https://mgbox/account?username=test1&access_token=YjgwZDJhMTU5MmZm&device_name=vm1'
     data="$(curl -is $MGBOX_SERVER_URL)"
     
     # Check http response header: 200 OK
