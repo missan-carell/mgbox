@@ -39,8 +39,8 @@ login_check_password() {
 
 
 mgbox_login() {
-#  CURRENT_USER=test2
-#  return 0
+ CURRENT_USER=test1
+ return 0
   while true; do
     # Prevent brute force password attacks 
     while true; do read -t 1 cmd || break; done
@@ -315,6 +315,7 @@ Operation Menu:
   2. Add new device
   3. Update device description
   4. Delete device
+  5. List device connect state
   x. Exit sub menu
 EOF
 )" || return $?
@@ -377,6 +378,25 @@ EOF
                   userid=(SELECT userid FROM user WHERE username='$CURRENT_USER' LIMIT 1)"
       if [ $? = 0 ]; then
         lognote "Delete device '$device_name' success!"
+      fi
+
+    elif [ "$op" == "5" ]; then     # List device connect state
+      read -t 30 -p "Device name: " device_name || continue
+      if [ -n "$device_name" ]; then
+        valiate_name "device name" "$device_name" ||  continue
+      fi
+
+      # Set to list all if not set
+      [ -z "$device_name" ] && device_name='%'
+      data=$(OP=-te mysql "SELECT device_name, \
+                                  IF ((CURRENT_TIMESTAMP - last_access) < 20, 'UP', 'Down') AS state, \
+                                  client_ip, last_access, description \
+                           FROM user_device_connect_state_view \
+                           WHERE username='$CURRENT_USER' and device_name LIKE '$device_name'");
+      if [[ "$data" =~ failed|rror ]]; then
+        logerr "List device '$device_name' connect state failed: $data"
+      else
+        echo "$data"
       fi
 
     else

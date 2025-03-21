@@ -32,13 +32,16 @@ auto_refresh_user_keys() {
   done
 }
 
-handle_http_request() {
-  loginfo "handle_http_request: $REQ_URI"
-  if [ ! "$REQ_URI" = "/account" ] && [ ! "$REQ_URI" = "/install" ]; then
-    http_resp_400 "Bad Request URI"
-    return 1
-  fi
+# @ [URI]
+check_request_uri() {
+  ALLOWED_URI=(/account /install /uninstall /cert/ca)
+  for uri in "${ALLOWED_URI[@]}"; do
+    [ "$1" == "$uri" ] && return 0
+  done
+  return 1
+}
 
+mgbox_req_install_and_account() {
   # Parse query
   local REQ_QUERYS="$(tr '&' '\n' <<< $REQ_QUERY)"
   while read line; do
@@ -142,10 +145,29 @@ EOF
       cat $SCRIPT_DIR/mgbox_client_setup.sh
     )"
   else
+    # Fetch device_id
+    data=$(mysql "SELECT device_id FROM user_device_view \
+                    WHERE username='$username' AND device_name='$device_name'");
+    if [[ -z "$data" || "$data" =~ failed|rror ]]; then
+        logerr "'$name' get device_id failed: $data"
+        http_resp_500 "query device_id error"
+        return 1
+    fi
+    device_id="$data"
+
+    # Update state
+    client_ip=$(netstat -natp | grep "$PPID/nc" | awk '{print $5}' | awk -F: '{print $1}')
+    client_ip="${client_ip:-unknown}"
+    mysql_exec "REPLACE INTO device_connect_state(device_id, client_ip, last_access) \
+                VALUES ('$device_id', '$client_ip', CURRENT_TIMESTAMP)";
+    if [ $? = 0 ]; then
+      loginfo "update device 'username='$username':$device_name'(client_ip=$client_ip) connect_state success!"
+    fi
+
     # Query device_user information from database
     data=$(mysql "SELECT device_name, device_user, passtext, UNIX_TIMESTAMP(last_modified) \
                     FROM user_device_device_user_view \
-                    WHERE username='$username' AND device_name='$device_name';");
+                    WHERE username='$username' AND device_name='$device_name'");
     if [[ "$data" =~ failed|rror ]]; then
         logerr "'$name' pull_keys failed: $data"
         http_resp_500 "query database error"
@@ -157,6 +179,49 @@ EOF
   http_resp_200 "$data"
 }
 
+mgbox_req_mgboxc_uninstall() {
+data=$(cat <<EOF
+  # uninstall services 
+  systemctl daemon-reload
+  systemctl disable mgboxc
+  systemctl stop mgboxc
+  rm -f /etc/systemd/system/mgboxc.service
+  rm -f /usr/mgbox/mgbox_client.sh
+  rm -f /usr/mgbox/ca.crt
+
+  echo "Mgbox stop done!"
+  echo "Please manualy remove below files:"
+  echo "  rm -rf /usr/mgbox/"
+  echo "  rm -f /var/log/mgbox.log"
+EOF
+)
+  # Send http response
+  http_resp_200 "$data"
+}
+
+handle_http_request() {
+  loginfo "handle_http_request: $REQ_URI"
+  if ! check_request_uri "$REQ_URI"; then
+    http_resp_400 "Bad Request URI"
+    return 1
+  fi
+
+  case $REQ_URI in
+    /cert/ca)
+      # response
+      http_resp_200 "$(cat /usr/mgbox/ca.crt)"
+      ;;
+    /uninstall)
+      mgbox_req_mgboxc_uninstall
+      ;;
+    /install | /account)
+      mgbox_req_install_and_account
+      ;;
+    *)
+      return http_resp_400 "Bad Request URI"
+      ;;
+  esac
+}
 
 ##########################################################################
 # HTTP Server 

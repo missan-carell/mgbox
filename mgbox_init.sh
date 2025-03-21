@@ -32,12 +32,11 @@ for i in $(seq 60); do
     sleep 1;
 done
 
-mysql -e "show tables" | grep "device_user"
-[ $? = 0 ] && MGBOX_HAS_INITED=yes
-
 # Initialize `mgbox` database
 lognote "Initialize mgbox database ..."
-if [ ! "$MGBOX_HAS_INITED" = yes ]; then
+if mysql -e "show tables" | grep "device_user" > /dev/null 2>&1; then
+  logwarn "mgbox database been initialized."
+else
   mysql -u root -proot -h database <<'EOF'
     -- Create new database
     CREATE DATABASE IF NOT EXISTS `mgbox`;
@@ -84,6 +83,14 @@ if [ ! "$MGBOX_HAS_INITED" = yes ]; then
     INSERT IGNORE INTO `device` (userid, device_name, description) VALUES (@userid_tester2, 'vm3', "DC shanghai");
     INSERT IGNORE INTO `device` (userid, device_name, description) VALUES (@userid_tester2, 'vm4', "DC Hangzhou");
 
+    CREATE TABLE IF NOT EXISTS `device_connect_state` (
+        `device_id` INT NOT NULL,
+        `client_ip` CHAR(40) NOT NULL UNIQUE,
+        `last_access` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (`device_id`) REFERENCES device(`device_id`) ON DELETE CASCADE,
+        PRIMARY KEY (`device_id`, `client_ip`)
+    );
+
     -- Retrieval device_id of tester1 and tester2
     SELECT @device_id_tester1_vm1 := device_id FROM device where userid=@userid_tester1 AND device_name='vm1';
     SELECT @device_id_tester2_vm3 := device_id FROM device where userid=@userid_tester2 AND device_name='vm3';
@@ -111,19 +118,24 @@ if [ ! "$MGBOX_HAS_INITED" = yes ]; then
 
     -- Create Views
     CREATE VIEW `user_device_view` AS 
-        SELECT user.userid, user.username, device.device_id, device.device_name, device.access_token, \
                device.install_token, device.description, device.created_at, device.last_modified 
         FROM `user` INNER JOIN `device` ON user.userid = device.userid;
 
     CREATE VIEW `device_device_user_view` AS 
-        SELECT device.userid, device.device_id, device.device_name, device_user.device_user, device_user.passtext, \
+        SELECT device.userid, device.device_id, device.device_name, device_user.device_user, device_user.passtext,
                device_user.description, device_user.created_at, device_user.last_modified 
         FROM `device` LEFT JOIN `device_user` ON device.device_id = device_user.device_id;
 
     CREATE VIEW `user_device_device_user_view` AS 
-        SELECT user.username, device_device_user_view.device_name, device_device_user_view.device_user, device_device_user_view.passtext, \
+        SELECT user.username, device_device_user_view.device_name, device_device_user_view.device_user, device_device_user_view.passtext,
                device_device_user_view.description, device_device_user_view.created_at, device_device_user_view.last_modified 
         FROM `device_device_user_view` LEFT JOIN `user` ON device_device_user_view.userid = user.userid;
+
+    CREATE VIEW `user_device_connect_state_view` AS 
+        SELECT user_device_view.username, user_device_view.device_name, device_connect_state.client_ip,
+                device_connect_state.last_access, user_device_view.description
+        FROM `user_device_view` LEFT JOIN `device_connect_state`
+                ON user_device_view.device_id = device_connect_state.device_id;
 
     -- Create Indexes 
     CREATE UNIQUE INDEX `device_index` ON `device` (`userid`, `device_name`);

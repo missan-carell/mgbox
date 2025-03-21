@@ -7,18 +7,23 @@ red() { echo -e "\033[1;31m$@\033[0m"; }
 yellow() { echo -e "\033[1;33m$@\033[0m"; }
 white() { echo -e "\033[1;37m$@\033[0m"; }
 
+# Set default loglevel
+LOGLEVEL=${LOGLEVEL:-5}
+[[ ! "$LOGLEVEL" =~ ^[1-7]$ ]] && LOGLEVEL=5
 
 MGBOX_LOG_FILE=/var/log/mgbox.log
-_log()    { local TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ"); \
+_log()    { local TIMESTAMP=$(date -u +"$LOGLEVEL %Y-%m-%dT%H:%M:%SZ"); \
             echo "$TIMESTAMP [${FUNCNAME[2]}]: $@" | tee -a "$MGBOX_LOG_FILE"; }
-loginfo() { _log "Info $@" 1>&2; }
-lognote() { _log "$(green Notice): $@" 1>&2; }
-logwarn() { _log "$(yellow Warning): $@" 1>&2; }
-logerr()  { _log "$(red Error): $@" 1>&2; }
-fatal()   { _log "$(red Error): $@" 1>&2; exit 1; }
+logbug()  { [ $LOGLEVEL -gt 5 ] && _log "Debug: $@" 1>&2; }
+loginfo() { [ $LOGLEVEL -gt 4 ] && _log "Info: $@" 1>&2; }
+lognote() { [ $LOGLEVEL -gt 3 ] && _log "$(green Notice): $@" 1>&2; }
+logwarn() { [ $LOGLEVEL -gt 2 ] && _log "$(yellow Warning): $@" 1>&2; }
+logerr()  { [ $LOGLEVEL -gt 1 ] && _log "$(red Error): $@" 1>&2; }
+fatal()   { [ $LOGLEVEL -gt 0 ] && _log "$(red Error): $@" 1>&2; exit 1; }
 
 
 mysql() {
+  logbug "$@"
   if [ -f /usr/bin/mysql ]; then
     /usr/bin/mysql ${OP:--NBe} "$@"
   else

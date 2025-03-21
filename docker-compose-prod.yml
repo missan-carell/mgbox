@@ -18,15 +18,8 @@ services:
     privileged: true
     command: init
     post_start:
-      - command: /bin/sh -c "/usr/mgbox/mgbox_init.sh"
+      - command: /bin/sh -c "/usr/mgbox/mgbox_init.sh PROD"
         privileged: true
-    volumes:
-      - $PWD/mgbox_init.sh:/usr/mgbox/mgbox_init.sh:rx
-      - $PWD/mgbox_cli.sh:/usr/mgbox/mgbox_cli.sh:rx
-      - $PWD/mgbox_server.sh:/usr/mgbox/mgbox_server.sh:rx
-      - $PWD/mgbox_client.sh:/usr/mgbox/mgbox_client.sh:rx
-      - $PWD/mgbox_client_setup.sh:/usr/mgbox/mgbox_client_setup.sh:rx
-      - $PWD/utils.sh:/usr/mgbox/utils.sh:rx
     ports:
       - 6422:22
       - 6443:443
