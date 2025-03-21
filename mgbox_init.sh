@@ -118,6 +118,7 @@ else
 
     -- Create Views
     CREATE VIEW `user_device_view` AS 
+        SELECT user.userid, user.username, device.device_id, device.device_name, device.access_token, \
                device.install_token, device.description, device.created_at, device.last_modified 
         FROM `user` INNER JOIN `device` ON user.userid = device.userid;
 

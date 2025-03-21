@@ -39,8 +39,8 @@ login_check_password() {
 
 
 mgbox_login() {
- CURRENT_USER=test1
- return 0
+#  CURRENT_USER=test1
+#  return 0
   while true; do
     # Prevent brute force password attacks 
     while true; do read -t 1 cmd || break; done

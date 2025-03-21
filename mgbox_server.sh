@@ -181,18 +181,21 @@ EOF
 
 mgbox_req_mgboxc_uninstall() {
 data=$(cat <<EOF
-  # uninstall services 
+#!/bin/bash
+# uninstall services
+if [ -f '/etc/systemd/system/mgboxc.service' ]; then
   systemctl daemon-reload
   systemctl disable mgboxc
   systemctl stop mgboxc
   rm -f /etc/systemd/system/mgboxc.service
-  rm -f /usr/mgbox/mgbox_client.sh
-  rm -f /usr/mgbox/ca.crt
+fi
+rm -f /usr/mgbox/mgbox_client.sh
+rm -f /usr/mgbox/ca.crt
 
-  echo "Mgbox stop done!"
-  echo "Please manualy remove below files:"
-  echo "  rm -rf /usr/mgbox/"
-  echo "  rm -f /var/log/mgbox.log"
+echo "Mgbox stop done!"
+echo "Please manualy remove below files:"
+echo "  rm -rf /usr/mgbox/"
+echo "  rm -f /var/log/mgbox.log"
 EOF
 )
   # Send http response
