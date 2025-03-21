@@ -1,4 +1,9 @@
 # MGBox
+### 一键部署
+```
+docker-compose -f docker-compose-prod.yml up -d
+./install_to_vms.sh
+```
 ### 部署客户端
 1. 从 mgbox CLI 获取设备安装令牌（install_token）
 2. 登录客户机，执行如下命令：
