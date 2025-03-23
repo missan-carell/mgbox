@@ -14,7 +14,7 @@ services:
 
   mgbox: 
     hostname: mgbox
-    image: missancarell/mgbox:v0.2
+    image: missancarell/mgbox:v0.3
     privileged: true
     command: init
     post_start:
@@ -28,8 +28,9 @@ services:
       - $PWD/mgbox_client_setup.sh:/usr/mgbox/mgbox_client_setup.sh:rx
       - $PWD/utils.sh:/usr/mgbox/utils.sh:rx
     ports:
-      - 6422:22
-      - 6443:443
+      # - 6422:22
+      # - 6443:443
+      - 4200:4200
     networks:
       - lan
       - wan

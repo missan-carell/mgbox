@@ -1,11 +1,11 @@
-# 
+# docker build -t missancarell/mgbox:v0.3 -f Dockerfile.mgbox .
 FROM ubuntu:20.04
 RUN apt-get update && \
     apt-get install -y \
         apt-utils iproute2 iputils-ping net-tools dnsutils \
         vim unzip lrzsz tcpdump lsof systemd firewalld \
         sudo wget curl telnet gawk ncat \
-        openssh-server mysql-client
+        shellinabox openssh-server mysql-client
 
 # Configure mgbox
 # 1. Setup time zone

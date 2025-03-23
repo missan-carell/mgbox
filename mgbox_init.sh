@@ -145,6 +145,25 @@ EOF
   [ $? != 0 ] && logerr "Prepare database failed." && exit 1
 fi
 
+# Setup mgbox for shellinabox if not set yet
+if ! grep mgbox /etc/default/shellinabox 2>&1 > /dev/null; then
+    mv '/etc/shellinabox/options-enabled/00_White On Black.css' \
+       '/etc/shellinabox/options-enabled/00+White On Black.css'
+    rm -f '/etc/shellinabox/options-enabled/00+Black on White.css'
+    sed -i '/SHELLINABOX_ARGS/d' /etc/default/shellinabox
+    cat >> /etc/default/shellinabox <<EOF
+SHELLINABOX_ARGS="--no-beep \
+--disable-ssl \
+--service=/:mgbox:mgbox:/home/mgbox:/usr/mgbox/mgbox_cli.sh \
+--service=/vm1/:SSH:vm1:22 \
+--service=/vm2/:SSH:vm2:22 \
+--service=/vm3/:SSH:vm3:22 \
+--service=/vm4/:SSH:vm4:22 \
+"
+EOF
+fi
+systemctl restart shellinabox
+
 # Create and start mgbox service
 # It provides HTTP/HTTPs service for remote clients.
 lognote "Initialize mgbox http service ..."
@@ -178,6 +197,7 @@ systemctl start mgbox
 lognote "Initialize firewall ..."
 firewall-cmd --permanent --add-service http
 firewall-cmd --permanent --add-service https
+firewall-cmd --permanent --add-port 4200/tcp
 firewall-cmd --reload
 
 lognote "Initialize mgbox done."
