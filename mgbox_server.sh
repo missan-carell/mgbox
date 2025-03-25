@@ -17,8 +17,8 @@ auto_refresh_user_keys() {
       loginfo "refresh user keys (inteval: $KEY_REFSH_INTERVAL, times $i) ..."
       mysql_exec "UPDATE device_user SET passtext=\
                       INSERT(TO_BASE64(LEFT(SHA2(UUID(), 256), 12)), \
-                      FLOOR(0 + RAND() * 12), 1, \
-                      SUBSTR('[!@#$%^&*()]', FLOOR(0 + RAND() * 12), 1))"
+                      FLOOR(1 + RAND() * 12), 1, \
+                      SUBSTR('[!@#$%^&*()]', FLOOR(1 + RAND() * 12), 1))"
       # mysql_exec "UPDATE device SET install_token=\
       #                 TO_BASE64(LEFT(SHA2(UUID(), 256), 12))"
       if [ $? = 0 ]; then
@@ -86,11 +86,9 @@ mgbox_req_install_and_account() {
     [ -z "$device_name" ] && http_resp_400 "device_name is empty" && return 1
 
     # Verify user login account
-    loginfo "username: $username, device_name: $device_name access_token: '$access_token'"
-    # data=$(mysql "SELECT username FROM user_device_view \
-    #               WHERE username='$username' AND device_name='$device_name'");
+    loginfo "username: $username, device_name: $device_name access_token: '***${access_token: -3}'"
     data=$(mysql "SELECT username FROM user_device_view \
-                  WHERE username='$username' AND device_name='$device_name' AND access_token='$access_token';");
+                  WHERE username='$username' AND device_name='$device_name' AND access_token='$access_token'");
     if [ ! "$username" = "$data" ]; then
       http_resp_400 "Bad username or access_token"
       return 1
@@ -100,10 +98,7 @@ mgbox_req_install_and_account() {
   if [ "$REQ_URI" = "/install" ]; then
     lognote "install: $username, device_name: $device_name '$access_token'"
 
-    # Query device_user information from database
-    # data=$(mysql "SELECT device_name, device_user, passtext, UNIX_TIMESTAMP(last_modified) \
-    #                 FROM user_device_device_user_view \
-    #                 WHERE username='$username' AND device_name='$device_name';");
+    # Make HTTP response body
     data="$(
       cat $SCRIPT_DIR/utils.sh
 
@@ -240,7 +235,7 @@ http_recv() {
   
   # Parse http header-line
   if [ -z $REQ_URI ]; then
-    lognote "HTTP: $(echo \"$line\" | sed 's/access_token=.*\&/access_token=***\&/g')"
+    lognote "HTTP: $(echo \"$line\" | sed 's/access_token=.*$/access_token=***/g')"
     URL=$(echo "$line" | awk '{ match($0, /^(GET|POST) (.*) HTTP\/1\.1$/, arr); print arr[2];}')
     [ -z $URL ] && logerr "Bad Request: $line" && return 1
   
@@ -248,7 +243,7 @@ http_recv() {
     [[ "$URL" =~ \? ]] && REQ_QUERY=${URL#*\?}
   
     loginfo "REQ_URI: $REQ_URI"
-    loginfo "REQ_QUERY: $(echo \"$REQ_QUERY\" | sed 's/access_token=.*\&/access_token=***\&/g')"
+    loginfo "REQ_QUERY: $(echo \"$REQ_QUERY\" | sed 's/access_token=.*$/access_token=***/g')"
   else
     loginfo "HTTP: $line"
     [ -z "$line" ] && break

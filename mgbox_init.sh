@@ -102,8 +102,8 @@ else
         `description` VARCHAR(128) NOT NULL DEFAULT "",
         `passtext` CHAR(128) NOT NULL DEFAULT 
             INSERT(TO_BASE64(LEFT(SHA2(UUID(), 256), 12)), \
-                   FLOOR(0 + RAND() * 12), 1, \
-                   SUBSTR('[!@#$%^&*()]', FLOOR(0 + RAND() * 12), 1)),
+                   FLOOR(1 + RAND() * 12), 1, \
+                   SUBSTR('[!@#$%^&*()]', FLOOR(1 + RAND() * 12), 1)),
         `last_passtext` CHAR(128) NOT NULL DEFAULT '',
         `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         `last_modified` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

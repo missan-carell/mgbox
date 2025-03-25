@@ -34,20 +34,22 @@ setup_sanity_check() {
     # Check target OS: Ubuntu
     if ! $(cat /etc/issue | grep "Ubuntu" > /dev/null 2>&1); then
         logerr "Only Ubuntu is supported."
-        exit 0
+        exit 1
     fi
 
     # Check systemd installed
     if ! $(which systemctl > /dev/null 2>&1); then
         logerr "Systemd not found."
-        exit 0
+        exit 1
     fi
 
-    # Check systemd is running
-    if ! $(ps -elf | grep "/sbin/init" > /dev/null 2>&1); then
-        logerr "Systemd is not running."
-        exit 0
-    fi
+    for i in $(seq 3); do
+        [ "$(systemctl is-active sshd)" = "active" ] && break
+        [ $i = 2 ] && fatal "Systemd is not running."
+
+        logwarn "Systemd sshd is not ready, wait for a while ..."
+        sleep 2
+    done
 }
 
 main() {

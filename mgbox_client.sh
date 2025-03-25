@@ -17,7 +17,7 @@ parse_config() {
 
     MGBOX_SERVER_URL="$SERVER_URL/account?username=$USERNAME&device_name=$DEVICE_NAME"
     MGBOX_SERVER_URL="$MGBOX_SERVER_URL&access_token=$ACCESS_TOKEN"
-    loginfo "MGBOX_SERVER_URL=$(echo \"$MGBOX_SERVER_URL\" | sed 's/access_token=.*\&/access_token=***\&/g')"
+    loginfo "MGBOX_SERVER_URL=$(echo \"$MGBOX_SERVER_URL\" | sed 's/access_token=.*$/access_token=***/g')"
 }
 
 parse_http_response() {
@@ -80,7 +80,7 @@ parse_http_response() {
 mgboxc_pull_account() {
     # Send http request to mgbox server
     lognote "mgboxc_pull_account ..."
-    # MGBOX_SERVER_URL='https://mgbox/account?username=test1&access_token=YjgwZDJhMTU5MmZm&device_name=vm1'
+    # MGBOX_SERVER_URL='https://mgbox/account?username=test1&device_name=vm1&access_token=XXXX'
     data="$(curl -is $MGBOX_SERVER_URL)"
     
     # Check http response header: 200 OK

@@ -12,8 +12,8 @@ LOGLEVEL=${LOGLEVEL:-5}
 [[ ! "$LOGLEVEL" =~ ^[1-7]$ ]] && LOGLEVEL=5
 
 MGBOX_LOG_FILE=/var/log/mgbox.log
-_log()    { local TIMESTAMP=$(date -u +"$LOGLEVEL %Y-%m-%dT%H:%M:%SZ"); \
-            echo "$TIMESTAMP [${FUNCNAME[2]}]: $@" | tee -a "$MGBOX_LOG_FILE"; }
+_log()    { local TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ"); \
+            echo "$TIMESTAMP [${FUNCNAME[2]}:${BASH_LINENO[1]}]: $@" | tee -a "$MGBOX_LOG_FILE"; }
 logbug()  { [ $LOGLEVEL -gt 5 ] && _log "Debug: $@" 1>&2; }
 loginfo() { [ $LOGLEVEL -gt 4 ] && _log "Info: $@" 1>&2; }
 lognote() { [ $LOGLEVEL -gt 3 ] && _log "$(green Notice): $@" 1>&2; }
@@ -25,7 +25,7 @@ fatal()   { [ $LOGLEVEL -gt 0 ] && _log "$(red Error): $@" 1>&2; exit 1; }
 mysql() {
   logbug "$@"
   if [ -f /usr/bin/mysql ]; then
-    /usr/bin/mysql ${OP:--NBe} "$@"
+    /usr/bin/mysql ${OP:--NBe} "$@" 2>&1
   else
     # docker exec -it mariadb mariadb -NBe "$@"
     docker exec -t mgbox-database-1 mariadb -u mgbox -pmgbox mgbox ${OP:--NBe} "$@"

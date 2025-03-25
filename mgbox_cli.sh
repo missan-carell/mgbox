@@ -25,7 +25,7 @@ CURRENT_USER=
 
 # @ username password
 login_check_password() {
-  data=$(mysql "select username FROM user WHERE username = '$1' AND password_hash = SHA2('$2', 256);");
+  data=$(mysql "select username FROM user WHERE username = '$1' AND password_hash = SHA2('$2', 256)");
   if [[ "$data" =~ failed|rror ]]; then
     logerr "check user '$1' failed: $data"
   else
@@ -288,8 +288,8 @@ EOF
       [[ ! "$yesno" =~ (Y|y) ]] && echo "Your selection is 'no'." && continue
 
       local sqlpass="INSERT(TO_BASE64(LEFT(SHA2(UUID(), 256), 12)), \
-                     FLOOR(0 + RAND() * 12), 1, \
-                     SUBSTR('[!@#$%^&*()]', FLOOR(0 + RAND() * 12), 1))"
+                     FLOOR(1 + RAND() * 12), 1, \
+                     SUBSTR('[!@#$%^&*()]', FLOOR(1 + RAND() * 12), 1))"
       mysql_exec "UPDATE device_user SET passtext=$sqlpass, last_modified=CURRENT_TIMESTAMP \
                   WHERE device_id=(SELECT device_id FROM user_device_view \
                                    WHERE username='$CURRENT_USER' and device_name='$CURRENT_DEVICE');"

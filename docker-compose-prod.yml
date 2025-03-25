@@ -4,25 +4,30 @@ services:
   database:
     hostname: database
     image: mariadb
+    restart: unless-stopped
     environment:
       - MYSQL_ROOT_PASSWORD=root
       - MARIADB_USER=mgbox
       - MARIADB_PASSWORD=mgbox
       - MARIADB_DATABASE=mgbox
+    volumes:
+      - $PWD/mysql:/var/lib/mysql
     networks: 
       - lan
 
   mgbox: 
     hostname: mgbox
-    image: missancarell/mgbox:v0.2
+    image: missancarell/mgbox:v0.3
+    restart: unless-stopped
     privileged: true
     command: init
     post_start:
-      - command: /bin/sh -c "/usr/mgbox/mgbox_init.sh PROD"
+      - command: /bin/sh -c "/usr/mgbox/mgbox_init.sh"
         privileged: true
     ports:
-      - 6422:22
-      - 6443:443
+      # - 6422:22
+      # - 6443:443
+      - 4200:4200
     networks:
       - lan
       - wan
@@ -31,6 +36,7 @@ services:
 #   tester: 
 #     hostname: tester
 #     image: missancarell/mgbox:v0.2
+#     restart: unless-stopped
 #     command: /bin/sh -c "while true; do sleep 10; done"
 #     depends_on:
 #       - mgbox
@@ -41,6 +47,7 @@ services:
   vm1: 
     hostname: vm1
     image: missancarell/ubuntu:v0.2
+    restart: unless-stopped
     privileged: true
     ports:
       - 6221:22
@@ -51,6 +58,7 @@ services:
   vm2: 
     hostname: vm2
     image: missancarell/ubuntu:v0.2
+    restart: unless-stopped
     privileged: true
     ports:
       - 6222:22
@@ -62,6 +70,7 @@ services:
   vm3: 
     hostname: vm3
     image: missancarell/ubuntu:v0.2
+    restart: unless-stopped
     privileged: true
     command: init
     ports:
@@ -73,6 +82,7 @@ services:
   vm4: 
     hostname: vm4
     image: missancarell/ubuntu:v0.2
+    restart: unless-stopped
     privileged: true
     command: init
     ports:
