@@ -169,24 +169,25 @@ systemctl restart shellinabox
 lognote "Initialize mgbox http service ..."
 MGBOX_SERVICE='/etc/systemd/system/mgbox.service'
 [ ! -f $MGBOX_SERVICE ] && cat > $MGBOX_SERVICE <<'EOF'
-    [Unit]
-    Description=mgbox server daemon
-    Documentation=
-    After=network.target
-    Wants=
+[Unit]
+Description=mgbox server daemon
+Documentation=
+After=network.target
+Wants=
 
-    [Service]
-    Type=simple
-    EnvironmentFile=
-    ExecStart=/usr/mgbox/mgbox_server.sh --port 443
-    ExecReload=/bin/kill -HUP $MAINPID
-    ExecStop=/bin/kill -TERM $MAINPID
-    KillMode=process
-    Restart=on-failure
-    RestartSec=10s
+[Service]
+Type=simple
+EnvironmentFile=
+ExecStart=/usr/mgbox/mgbox_server.sh --port 443
+ExecReload=/bin/kill -HUP $MAINPID
+# Note: Change -TERM to -HUP due to 'nc' umasked this signal?
+ExecStop=/bin/kill -HUP $MAINPID
+KillMode=process
+Restart=on-failure
+RestartSec=10s
 
-    [Install]
-    WantedBy=multi-user.target
+[Install]
+WantedBy=multi-user.target
 EOF
 systemctl daemon-reload
 systemctl enable mgbox

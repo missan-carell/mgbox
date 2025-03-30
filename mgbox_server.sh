@@ -289,10 +289,16 @@ ahealthz_check() {
   done
 }
 
+cleanup() {
+  lognote "mgbox server exting...";
+  kill $(jobs -p);
+  exit 1
+}
+
 main() {
   if [ "$1" = "--port" ]; then
     # Handle signals: Kill all child processeson exit
-    trap 'kill $(jobs -p); lognote "server exting..."; exit 1' SIGINT SIGTERM EXIT
+    trap cleanup SIGINT SIGTERM EXIT
 
     # Start auto-refresh-user-keys task
     lognote "Start auto-refresh-user-keys task ..."
