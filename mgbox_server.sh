@@ -270,6 +270,25 @@ http_resp_200() { http_resp "200 OK" "$1"; }
 http_resp_400() { http_resp "400 Bad Request" "$1"; }
 http_resp_500() { http_resp "500 Internal error" "$1"; }
 
+# Monitor the memory of nc
+# FIXME: Rewrite this module with go or python.
+# * The nc v7.80 has memory leak bug.
+# * The latest nc v7.94 will dead loop bug.
+# * Add ahealthz_check to restart nc when memory up to 64M.
+ahealthz_check() {
+  MAX_VM_SIZE=$((64*1024))
+  while true; do
+    sleep 10
+    vmrss=$(cat /proc/$(pidof nc | awk '{print $NF}')/status | awk '/^VmRSS/ {print $2}')
+    if [[ -n "$vmrss" && $vmrss -gt $MAX_VM_SIZE ]]; then
+      logwarn "Process nc memory leak: current size: $vmrss, restart it!"
+      kill -9 "${pidof nc}"
+    else
+      loginfo "Process nc memory size: $vmrss (limit: $MAX_VM_SIZE)"
+    fi
+  done
+}
+
 main() {
   if [ "$1" = "--port" ]; then
     # Handle signals: Kill all child processeson exit
@@ -278,6 +297,10 @@ main() {
     # Start auto-refresh-user-keys task
     lognote "Start auto-refresh-user-keys task ..."
     auto_refresh_user_keys &
+
+    # Start healthz_check task
+    lognote "Start healthz_check task ..."
+    ahealthz_check &
 
     # Start http server
     lognote "Start http server on port $2"
