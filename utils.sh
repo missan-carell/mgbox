@@ -50,6 +50,6 @@ mysql_exec() {
 
 valiate_name() {
   [ ${#2} -lt 3 ] && logerr "${1^} length is too short!" && return 1
-  [[ ! "$2" =~ ^[a-zA-z0-9\-]+$ ]] && logerr "${1^} is not in charset '[a-zA-z0-9\-]'" && return 1
+  [[ ! "$2" =~ ^[a-zA-Z0-9\-]+$ ]] && logerr "${1^} is not in charset '[a-zA-Z0-9\-]'" && return 1
   return 0
 }

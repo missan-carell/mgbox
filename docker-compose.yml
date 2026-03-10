@@ -1,21 +1,25 @@
-
 services:
-### Services in LWAN ########
+  # 数据库服务
   database:
     hostname: database
     image: mariadb
     restart: unless-stopped
     environment:
-      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD_ROOT}
       - MARIADB_USER=mgbox
-      - MARIADB_PASSWORD=mgbox
+      - MARIADB_PASSWORD=${DB_PASSWORD}
       - MARIADB_DATABASE=mgbox
     volumes:
       - $PWD/mysql:/var/lib/mysql
-    networks: 
+    networks:
       - lan
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-u", "mgbox", "-p${DB_PASSWORD}"]
+      timeout: 5s
+      retries: 5
 
-  mgbox: 
+  # 提供 shellinabox 和客户端功能
+  mgbox:
     hostname: mgbox
     image: missancarell/mgbox:v0.3
     restart: unless-stopped
@@ -24,6 +28,8 @@ services:
     post_start:
       - command: /bin/sh -c "/usr/mgbox/mgbox_init.sh"
         privileged: true
+    environment:
+      - DB_PASSWORD_ROOT=${DB_PASSWORD_ROOT}
     volumes:
       - $PWD/mgbox_init.sh:/usr/mgbox/mgbox_init.sh:rx
       - $PWD/mgbox_cli.sh:/usr/mgbox/mgbox_cli.sh:rx
@@ -32,26 +38,16 @@ services:
       - $PWD/mgbox_client_setup.sh:/usr/mgbox/mgbox_client_setup.sh:rx
       - $PWD/utils.sh:/usr/mgbox/utils.sh:rx
     ports:
-      # - 6422:22
-      # - 6443:443
-      - 4200:4200
+      - 4200:4200   # shellinabox 端口
+      - 9443:443    # mgbox service: /account /install /uninstall /cert/ca
+    depends_on:
+      - database
     mem_limit: 128M
     networks:
       - lan
       - wan
-    
-# ### Tester in WAN ########
-#   tester: 
-#     hostname: tester
-#     image: missancarell/mgbox:v0.2
-#     restart: unless-stopped
-#     command: /bin/sh -c "while true; do sleep 10; done"
-#     depends_on:
-#       - mgbox
-#     networks:
-#       - wan
 
-### VMs in WAN ########
+# 原有测试虚拟机: VMs in WAN ########
   vm1: 
     hostname: vm1
     image: missancarell/ubuntu:v0.2
@@ -100,6 +96,51 @@ services:
     networks: 
       - wan
 
+  # 新增 Flask 后端
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+    - "5000:5000" 
+    environment:
+      - DB_HOST=database
+      - DB_PORT=3306
+      - DB_USER=mgbox
+      - DB_PASS=${DB_PASSWORD}
+      - DB_NAME=mgbox
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+    volumes:
+      #- ./backend:/app/backend
+      - ./backend:/app/
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - lan
+      - wan
+
+  # 新增巡检服务
+  inspector:
+    build: ./inspector
+    restart: unless-stopped
+    environment:
+      - DB_HOST=database
+      - DB_USER=mgbox
+      - DB_PASS=${DB_PASSWORD}
+      - DB_NAME=mgbox
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+    volumes:
+      - ./inspector/inspector.py:/app/inspector.py
+    depends_on:
+      - database
+      - mgbox
+    networks:
+      - lan
+      - wan
 networks:
   lan:
     driver: bridge

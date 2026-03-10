@@ -4,11 +4,12 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source $SCRIPT_DIR/utils.sh
 
 mysql() {
-    docker exec -t mgbox-database-1 mariadb -u mgbox -pmgbox mgbox ${OP:--NBe} "$@"
+    docker exec -t mgbox-database-1 mariadb -u mgbox -p${DB_PASS:-mgbox} mgbox ${OP:--NBe} "$@"
 }
 
 # Install Mgbox Agent to each VM
-for vm in $(echo vm1 vm2 vm3 vm4); do
+VMS="${VMS:-$@}"
+for vm in $(echo ${VMS:-vm1 vm2 vm3 vm4}); do
     install_token=$(mysql "SELECT install_token \
                            FROM device \
                            WHERE device_name='$vm'")

@@ -106,13 +106,13 @@ mgbox_req_install_and_account() {
       cat <<'EOF'
 mgbox_client_config() {
   lognote "Setting up mgbox client config ..."
-  MGBOXC_SCRIPT='/usr/mgbox/mgboxc.conf'
+  MGBOXC_CONF=/usr/mgbox/mgboxc.conf
   [ ! -d "/usr/mgbox" ] && mkdir -p /usr/mgbox && chmod 600 /usr/mgbox
-  cat > $MGBOXC_SCRIPT <<SETUP_EOF
+  cat > $MGBOXC_CONF <<SETUP_EOF
 EOF
       cat <<EOF
 # mgbox client config
-SERVER_URL=${SERVER_URL:-https://mgbox}
+SERVER_URL=https://\${MGBOX_DOMAIN:-mgbox}
 USERNAME=$username
 DEVICE_NAME=$device_name
 ACCESS_TOKEN=$access_token

@@ -4,16 +4,16 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 [ -f "$SCRIPT_DIR/utils.sh" ] && source $SCRIPT_DIR/utils.sh
 
 parse_config() {
-    MGBOXC_SCRIPT='/usr/mgbox/mgboxc.conf'
-    if [ ! -f "$MGBOXC_SCRIPT" ]; then
-        logerr "$MGBOXC_SCRIPT not found."
+    MGBOXC_CONF='/usr/mgbox/mgboxc.conf'
+    if [ ! -f "$MGBOXC_CONF" ]; then
+        logerr "$MGBOXC_CONF not found."
         exit 1
     fi
 
-    SERVER_URL=$(cat $MGBOXC_SCRIPT | grep ^SERVER_URL= | cut -d '=' -f 2)
-    USERNAME=$(cat $MGBOXC_SCRIPT | grep ^USERNAME= | cut -d '=' -f 2)
-    DEVICE_NAME=$(cat $MGBOXC_SCRIPT | grep ^DEVICE_NAME= | cut -d '=' -f 2)
-    ACCESS_TOKEN=$(cat $MGBOXC_SCRIPT | grep ^ACCESS_TOKEN= | cut -d '=' -f 2)
+    SERVER_URL=$(cat $MGBOXC_CONF | grep ^SERVER_URL= | cut -d '=' -f 2)
+    USERNAME=$(cat $MGBOXC_CONF | grep ^USERNAME= | cut -d '=' -f 2)
+    DEVICE_NAME=$(cat $MGBOXC_CONF | grep ^DEVICE_NAME= | cut -d '=' -f 2)
+    ACCESS_TOKEN=$(cat $MGBOXC_CONF | grep ^ACCESS_TOKEN= | cut -d '=' -f 2)
 
     MGBOX_SERVER_URL="$SERVER_URL/account?username=$USERNAME&device_name=$DEVICE_NAME"
     MGBOX_SERVER_URL="$MGBOX_SERVER_URL&access_token=$ACCESS_TOKEN"

@@ -1,0 +1,5 @@
+Flask==2.3.3
+Flask-CORS==4.0.1
+Flask-Mail==0.9.1
+pymysql==1.1.0
+gunicorn==21.2.0

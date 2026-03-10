@@ -37,7 +37,7 @@ lognote "Initialize mgbox database ..."
 if mysql -e "show tables" | grep "device_user" > /dev/null 2>&1; then
   logwarn "mgbox database been initialized."
 else
-  mysql -u root -proot -h database <<'EOF'
+  mysql -u root -p${DB_PASSWORD_ROOT:-root} -h database <<'EOF'
     -- Create new database
     CREATE DATABASE IF NOT EXISTS `mgbox`;
     USE `mgbox`;
@@ -88,7 +88,7 @@ else
         `client_ip` CHAR(40) NOT NULL UNIQUE,
         `last_access` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (`device_id`) REFERENCES device(`device_id`) ON DELETE CASCADE,
-        PRIMARY KEY (`device_id`, `client_ip`)
+        PRIMARY KEY (`device_id`)
     );
 
     -- Retrieval device_id of tester1 and tester2

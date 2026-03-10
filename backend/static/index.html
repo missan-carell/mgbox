@@ -1,0 +1,1781 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>魔盒 · 轻量密钥管理系统</title>
+    <!-- Bootstrap 5 样式 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome 6 图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Animate.css 动效库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <style>
+        /* 蓝色主题变量 */
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --primary-light: #60a5fa;
+            --secondary: #1e293b;
+            --bg-light: #f0f9ff;
+            --card-bg: #ffffff;
+            --text-dark: #0f172a;
+            --text-muted: #475569;
+        }
+        body {
+            background: var(--bg-light);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            color: var(--text-dark);
+        }
+        /* 动效 */
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .stat-card, .table-devices, .user-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .stat-card:hover, .table-devices:hover, .user-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 30px -10px rgba(59,130,246,0.15);
+        }
+        /* 卡片样式 */
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.02);
+            border: 1px solid rgba(59,130,246,0.1);
+        }
+        .stat-icon {
+            font-size: 2.5rem;
+            color: var(--primary);
+            opacity: 0.8;
+        }
+        .stat-label {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+        }
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        .table-devices, .user-card {
+            background: white;
+            border-radius: 28px;
+            box-shadow: 0 12px 30px rgba(59,130,246,0.08);
+            border: none;
+            overflow: hidden;
+        }
+        .table-devices thead th, .user-card thead th {
+            background: #f8fcff;
+            color: var(--primary-dark);
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--primary-light);
+        }
+        .badge-online {
+            background: #d1fae5;
+            color: #065f46;
+            font-weight: 500;
+            padding: 6px 12px;
+            border-radius: 30px;
+        }
+        .badge-offline {
+            background: #fee2e2;
+            color: #991b1b;
+            font-weight: 500;
+            padding: 6px 12px;
+            border-radius: 30px;
+        }
+        .btn-view, .btn-action {
+            border-radius: 40px;
+            padding: 4px 16px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            border: 1px solid #e2e8f0;
+            color: var(--text-dark);
+            transition: all 0.15s;
+        }
+        .btn-view:hover, .btn-action:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+        .btn-view i, .btn-action i {
+            margin-right: 4px;
+        }
+        /* 模态框 */
+        .modal-content {
+            border-radius: 28px;
+            border: none;
+            box-shadow: 0 30px 60px rgba(59,130,246,0.3);
+        }
+        .modal-header {
+            border-bottom: 1px solid #e2e8f0;
+            background: #f8fcff;
+            border-radius: 28px 28px 0 0;
+        }
+        /* 登录 */
+        .login-modal .modal-dialog {
+            max-width: 400px;
+        }
+        .login-modal .modal-body {
+            padding: 32px;
+        }
+        .login-logo {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .login-logo img {
+            height: 60px;
+        }
+        .login-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        .login-sub {
+            color: var(--text-muted);
+            margin-bottom: 24px;
+        }
+        .btn-login {
+            width: 100%;
+            padding: 12px;
+            font-weight: 500;
+            border-radius: 40px;
+            background: var(--primary);
+            border: none;
+        }
+        .btn-login:hover {
+            background: var(--primary-dark);
+        }
+        /* 导航选项卡 */
+        .nav-pills .nav-link {
+            color: var(--text-dark);
+            border-radius: 40px;
+            padding: 10px 24px;
+            font-weight: 500;
+        }
+        .nav-pills .nav-link.active {
+            background: var(--primary);
+            color: white;
+        }
+        .nav-pills .nav-link i {
+            margin-right: 8px;
+        }
+        .footer-note {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+            font-weight: 500;
+            padding: 4px 12px;
+            border-radius: 30px;
+        }
+        .badge-danger {
+            background: #fee2e2;
+            color: #991b1b;
+            font-weight: 500;
+            padding: 4px 12px;
+            border-radius: 30px;
+        }
+        
+
+        /* 巡检报告表格优化 */
+        #inspection .table {
+            table-layout: fixed;  /* 固定布局，防止列宽被内容撑开 */
+            width: 100%;
+        }
+
+        #inspection .table th,
+        #inspection .table td {
+            white-space: nowrap;   /* 默认所有列不换行 */
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        #inspection .table td:nth-child(3) {  /* 消息 */
+            white-space: normal;   /* 允许消息列换行 */
+            word-break: break-word;
+            max-width: 250px;
+        }
+
+        #inspection .table td:nth-child(4) {  /* AI建议 */
+            white-space: normal;
+            word-break: break-word;
+            max-width: 300px;
+        }
+
+        
+        .badge-success,
+        .badge-danger {
+            white-space: nowrap;
+            display: inline-block;
+        }
+
+        #inspection .table th:nth-child(1) { width: 12%; }  /* 设备 */
+        #inspection .table th:nth-child(2) { width: 8%; }   /* 状态 */
+        #inspection .table th:nth-child(3) { width: 25%; }  /* 消息 */
+        #inspection .table th:nth-child(4) { width: 35%; }  /* AI建议 */
+        #inspection .table th:nth-child(5) { width: 20%; }  /* 时间 */
+
+        /* 删除按钮 */
+        .btn-danger {
+            background-color: #fff0f0;
+            border-color: #ffcdd2;
+            color: #ca5252;
+        }
+        .btn-danger:hover {
+            background-color: #ffe0e0;
+            border-color: #ffb3b3;
+            color: #cd5c5c;
+        }
+
+        /* 安装命令按钮 */
+        .btn-info {
+            background-color: #e6f7ff;
+            border-color: #b3e0ff;
+            color: #073757;
+        }
+        .btn-info:hover {
+            background-color: #d1ecff;
+            border-color: #99d6ff;
+            color: #003f66;
+        }
+
+        /* 编辑按钮 */
+        .btn-warning {
+            background-color: #fff3e0;
+            border-color: #ffe0b3;
+            color: #b24d00;
+        }
+        .btn-warning:hover {
+            background-color: #ffebcc;
+            border-color: #ffcc80;
+            color: #804000;
+        }
+
+        /* 设备用户编辑按钮（ */
+        .btn-soft-primary {
+            background-color: #e6f0ff;
+            border-color: #b3d1ff;
+            color: #2b4f8c;
+        }
+        .btn-soft-primary:hover {
+            background-color: #d4e4ff;
+            border-color: #99bbff;
+            color: #1a3366;
+        }
+
+        
+    </style>
+
+<body>
+    <!-- 新手引导 -->
+    <div class="modal fade" id="tutorialModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="fas fa-graduation-cap me-2"></i>欢迎使用魔盒</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="关闭"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div id="tutorialCarousel" class="carousel slide" data-bs-ride="false" data-bs-interval="false">
+                        <div class="carousel-inner">
+                            <!-- 步骤1 -->
+                            <div class="carousel-item active">
+                                <div class="text-center mb-4">
+                                    <i class="fas fa-cube fa-4x text-primary mb-3"></i>
+                                    <h4>什么是魔盒？</h4>
+                                </div>
+                                <p class="lead small">魔盒是一个轻量级密钥管理系统，帮助您安全地管理大型服务器集群的秘钥。</p>
+                                <p><strong>两个角色：</strong></p>
+                                <ul>
+                                    <li><i class="fas fa-user-circle text-primary me-2"></i><strong>魔盒用户</strong> – 当前登录所使用的用户，通过网页登录管理设备。</li>
+                                    <li><i class="fas fa-server text-success me-2"></i><strong>设备用户</strong> – 服务器上的真实账号，密码由魔盒通过哈希算法非对称加密，并自动更新。</li>
+                                </ul>
+                            </div>
+                            <!-- 步骤2 -->
+                            <div class="carousel-item">
+                                <div class="text-center mb-4">
+                                    <i class="fas fa-list-ul fa-4x text-primary mb-3"></i>
+                                    <h4>设备管理</h4>
+                                </div>
+                                <p>在“设备管理”页面，您可以：</p>
+                                <ul>
+                                    <li>查看所有设备的状态（在线/离线）</li>
+                                    <li>点击 <span class="badge bg-primary">查看用户</span> 获取该设备下所有服务器账号的密码</li>
+                                    <li>管理员可以看到所有设备，普通用户只能看自己的</li>
+                                </ul>
+                                <div class="alert alert-info small mt-3">
+                                    <i class="fas fa-lightbulb me-2"></i>设备用户的密码会定期自动更新，无需记忆。
+                                </div>
+                            </div>
+                            <!-- 步骤3 -->
+                            <div class="carousel-item">
+                                <div class="text-center mb-4">
+                                    <i class="fas fa-users-cog fa-4x text-primary mb-3"></i>
+                                    <h4>用户管理</h4>
+                                </div>
+                                <p>管理员可以：</p>
+                                <ul>
+                                    <li>新增/删除魔盒用户</li>
+                                    <li>修改用户密码</li>
+                                    <li>查看审计日志（即将推出）</li>
+                                </ul>
+                                <p>普通用户没有此页面权限。</p>
+                            </div>
+                            <!-- 步骤4 -->
+                            <div class="carousel-item">
+                                <div class="text-center mb-4">
+                                    <i class="fas fa-robot fa-4x text-primary mb-3"></i>
+                                    <h4>智能巡检</h4>
+                                </div>
+                                <p>系统会定时自动检查设备是否可访问，并在“巡检报告”中记录结果。</p>
+                                <p>如果设备离线，AI 还会给出故障排查建议。</p>
+                            </div>
+                        </div>
+                        <!-- 轮播控制按钮 -->
+                        <button class="carousel-control-prev" type="button" data-bs-target="#tutorialCarousel" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon bg-primary rounded-circle p-2" aria-hidden="true"></span>
+                            <span class="visually-hidden">上一步</span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#tutorialCarousel" data-bs-slide="next">
+                            <span class="carousel-control-next-icon bg-primary rounded-circle p-2" aria-hidden="true"></span>
+                            <span class="visually-hidden">下一步</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <span class="small text-muted">不再显示？下次登录仍可查看</span>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">开始使用</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 登录模态框 -->
+    <div class="modal fade login-modal" id="loginModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="login-logo">
+                        <img src="logo.png" alt="魔盒logo" style="height: 60px;" onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%2230%22%20fill%3D%22%233b82f6%22%2F%3E%3Ctext%20x%3D%2215%22%20y%3D%2240%22%20fill%3D%22%23fff%22%20font-size%3D%2220%22%3E%E9%AD%94%E7%9B%92%3C%2Ftext%3E%3C%2Fsvg%3E';">
+                    </div>
+                    <div class="login-title text-center">欢迎使用魔盒</div>
+                    <div class="login-sub text-center">轻量密钥管理系统</div>
+                    <form id="loginForm">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">用户名</label>
+                            <input type="text" class="form-control form-control-lg" id="username" placeholder="请输入用户名">
+                        </div>
+                        <div class="mb-4">
+                            <label for="password" class="form-label">密码</label>
+                            <input type="password" class="form-control form-control-lg" id="password" placeholder="请输入密码">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-login">登 录</button>
+                    </form>
+                    <div class="text-center mt-3" id="registerLinkContainer">
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#registerModal">没有账号？注册</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- 注册模态框 -->
+    <div class="modal fade" id="registerModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-user-plus me-2 text-primary"></i>注册新用户</h5>
+                    <button type="button" class="btn-close" onclick="closeRegisterModal()"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="registerForm">
+                        <div class="mb-3">
+                            <label>用户名</label>
+                            <input type="text" class="form-control" id="regUsername" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>邮箱</label>
+                            <input type="email" class="form-control" id="regEmail" required>
+                            <small class="form-text text-muted">当前为测试版本，仅支持QQ邮箱</small>
+                        </div>
+                        <div class="mb-3">
+                            <label>密码</label>
+                            <input type="password" class="form-control" id="regPassword" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>验证码</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="regCode" placeholder="6位数字" maxlength="6" required>
+                                <button class="btn btn-outline-primary" type="button" id="sendCodeBtn" onclick="sendVerificationCode()">
+                                    <span id="codeBtnText">获取验证码</span>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeRegisterModal()">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="registerWithCode()">注册</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 导航栏 (登录后可见) -->
+    <nav class="navbar navbar-dark bg-dark px-4 py-3" id="mainNav" style="display: none;">
+        <div class="container-fluid">
+            <span class="navbar-brand d-flex align-items-center">
+                <img src="logo.png" alt="魔盒logo" height="40" class="me-2" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
+                <i class="fas fa-cube fs-2 me-2" style="display: none; color: #3b82f6;"></i>
+                <span style="font-weight: 500; font-size: 1.4rem;">魔盒</span>
+                <span class="badge bg-warning text-dark ms-3" style="font-size: 0.7rem;">轻量密钥管理</span>
+            </span>
+            <div class="text-white-50 d-flex align-items-center">
+                <span class="me-3" id="loggedUser"><i class="fas fa-user-circle me-1"></i> 未登录</span>
+                <button class="btn btn-outline-light btn-sm" id="logoutBtn"><i class="fas fa-sign-out-alt me-1"></i>退出</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容 (登录后可见) -->
+        <main class="container my-5" id="mainContent" style="display: none;">
+        <!-- 选项卡切换 -->
+        <ul class="nav nav-pills mb-4 justify-content-center fade-in" id="mainTab" role="tablist">
+            <!-- 设备管理 -->
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="devices-tab" data-bs-toggle="pill" data-bs-target="#devices" type="button" role="tab" aria-controls="devices" aria-selected="true">
+                    <i class="fas fa-server"></i> 设备管理
+                </button>
+            </li>
+            <!-- 管理员可见：用户管理 -->
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="users-tab" data-bs-toggle="pill" data-bs-target="#users" type="button" role="tab" aria-controls="users" aria-selected="false">
+                    <i class="fas fa-users-cog"></i> 用户管理
+                </button>
+            </li>
+            <!-- 管理员可见：巡检报告标签 -->
+            <li class="nav-item" id="inspection-tab-item" style="display: none;">
+                <button class="nav-link" id="inspection-tab" data-bs-toggle="pill" data-bs-target="#inspection" type="button" role="tab">
+                    <i class="fas fa-robot"></i> 巡检报告
+                </button>
+            </li>
+            <!--管理员可见：申请列表-->
+            <li class="nav-item" id="application-tab-item" style="display: none;">
+                <button class="nav-link" id="application-tab" data-bs-toggle="pill" data-bs-target="#applications" type="button">
+                    <i class="fas fa-clipboard-list"></i> 设备申请
+                </button>
+            </li>
+             <!--管理员可见：申请记录-->
+            <li class="nav-item" id="history-tab-item" style="display: none;">
+                <button class="nav-link" id="history-tab" data-bs-toggle="pill" data-bs-target="#history" type="button">
+                    <i class="fas fa-archive"></i> 申请历史
+                </button>
+            </li>
+        </ul>
+        <!-- 编辑设备模态框 -->
+        <div class="modal fade" id="editDeviceModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="fas fa-edit me-2 text-primary"></i>编辑设备描述</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="editDeviceName">
+                        <div class="mb-3">
+                            <label>新描述</label>
+                            <input type="text" class="form-control" id="editDeviceDesc" placeholder="例如：DC Shanghai">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="button" class="btn btn-primary" onclick="updateDevice()">保存</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- 新增设备用户  -->
+        <div class="modal fade" id="addDeviceUserModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="fas fa-user-plus me-2 text-primary"></i>新增设备用户</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="addDeviceUserForm">
+                            <div class="mb-3">
+                                <label>用户名</label>
+                                <input type="text" class="form-control" id="newDeviceUser" required>
+                            </div>
+                            <div class="mb-3">
+                                <label>描述</label>
+                                <input type="text" class="form-control" id="newDeviceUserDesc">
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="button" class="btn btn-primary" onclick="saveDeviceUser()">保存</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- 选项卡内容 -->
+        <div class="tab-content">
+            <!-- 设备管理面板 -->
+            <div class="tab-pane fade show active" id="devices" role="tabpanel" aria-labelledby="devices-tab">
+                <div class="row g-4 mb-5">
+                    <div class="col-md-4">
+                        <div class="stat-card d-flex align-items-center animate__animated animate__fadeInUp">
+                            <div class="stat-icon me-3"><i class="fas fa-server"></i></div>
+                            <div><div class="stat-label">总设备数</div><div class="stat-number" id="total-devices">0</div></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card d-flex align-items-center animate__animated animate__fadeInUp animate__delay-1s">
+                            <div class="stat-icon me-3"><i class="fas fa-check-circle text-success"></i></div>
+                            <div><div class="stat-label">在线设备</div><div class="stat-number" id="online-devices">0</div></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card d-flex align-items-center animate__animated animate__fadeInUp animate__delay-2s">
+                            <div class="stat-icon me-3"><i class="fas fa-key text-warning"></i></div>
+                            <div><div class="stat-label">待更新密码</div><div class="stat-number" id="expiring-keys">-</div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-devices animate__animated animate__fadeInUp animate__delay-1s">
+                    <div class="p-4 pb-0 d-flex justify-content-between align-items-center">
+                        <div class="p-4 pb-0 d-flex justify-content-between align-items-center">
+                        <h5 class="fw-bold mb-0"><i class="fas fa-list-ul me-2 text-primary"></i>设备清单</h5>
+                        <div>
+                            <button class="btn btn-primary btn-sm me-2" onclick="showApplyDeviceModal()">
+                                <i class="fas fa-plus-circle"></i> 申请设备
+                            </button>
+                            <span class="text-muted small" id="last-refresh"><i class="far fa-clock me-1"></i>实时更新</span>
+                        </div>
+                    </div>
+                        
+                        <span class="text-muted small" id="last-refresh"><i class="far fa-clock me-1"></i>实时更新</span>
+                    </div>
+                    <div class="p-3">
+                        <table class="table align-middle mb-0">
+                            <thead><tr><th>设备名</th><th>描述</th><th>状态</th><th>最后访问</th><th>操作</th></tr></thead>
+                            <tbody id="device-tbody">
+                                <tr><td colspan="5" class="text-center py-5"><div class="spinner-border text-primary"></div> 正在获取设备信息...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 申请设备模态框 -->
+            <div class="modal fade" id="applyDeviceModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title"><i class="fas fa-server me-2 text-primary"></i>申请新设备</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="applyDeviceForm">
+                                <div class="mb-3">
+                                    <label for="applyDeviceName" class="form-label">设备名</label>
+                                    <input type="text" class="form-control" id="applyDeviceName" required>
+                                    <small class="form-text text-muted">只能包含字母、数字、连字符</small>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="applyDeviceDesc" class="form-label">描述</label>
+                                    <input type="text" class="form-control" id="applyDeviceDesc" placeholder="例如：DC Shanghai">
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                            <button type="button" class="btn btn-primary" onclick="submitDeviceApplication()">提交申请</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 用户管理面板 -->
+            <div class="tab-pane fade" id="users" role="tabpanel" aria-labelledby="users-tab">
+                <div class="user-card p-4 animate__animated animate__fadeInUp">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="fw-bold mb-0"><i class="fas fa-users me-2 text-primary"></i>用户列表</h5>
+                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                            <i class="fas fa-plus-circle"></i> 新增用户
+                        </button>
+                    </div>
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>用户名</th>
+                                <th>邮箱</th>
+                                <th>角色</th>
+                                <th>创建时间</th>
+                                <th>最后修改</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="user-list-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 巡检报告面板 -->
+            <div class="tab-pane fade" id="inspection" role="tabpanel" aria-labelledby="inspection-tab">
+                <div class="user-card p-4 animate__animated animate__fadeInUp">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0"><i class="fas fa-history me-2 text-primary"></i>最近巡检记录</h5>
+                        <span class="text-muted small"><i class="far fa-clock me-1"></i>自动刷新</span>
+                    </div>
+                    <div style="max-height: 500px; overflow-y: auto;">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>设备</th>
+                                    <th>状态</th>
+                                    <th>消息</th>
+                                    <th>AI建议</th>
+                                    <th>时间</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inspection-tbody">
+                                <tr><td colspan="5" class="text-center py-4"><div class="spinner-border text-primary"></div> 加载中...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+                <!-- 申请列表 -->
+                <div class="tab-pane fade" id="applications" role="tabpanel">
+                    <div class="user-card p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold mb-0"><i class="fas fa-clipboard-list me-2 text-primary"></i>待处理的设备申请</h5>
+                            <div>
+                                <button class="btn btn-success btn-sm me-2" onclick="batchApproveSelected()">
+                                    <i class="fas fa-check-double"></i> 批量批准
+                                </button>
+                                <span class="text-muted small">已选 <span id="selected-count">0</span> 项</span>
+                            </div>
+                        </div>
+                        <div style="max-height: 500px; overflow-y: auto;">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th><input type="checkbox" id="select-all" onclick="toggleSelectAll()"></th>
+                                        <th>申请人</th>
+                                        <th>设备名</th>
+                                        <th>描述</th>
+                                        <th>申请时间</th>
+                                        <th>状态</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="application-tbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 申请历史 -->
+                <div class="tab-pane fade" id="history" role="tabpanel">
+                    <div class="user-card p-4">
+                        <h5 class="fw-bold mb-3"><i class="fas fa-history me-2 text-primary"></i>最近30条申请历史</h5>
+                        <div style="max-height: 500px; overflow-y: auto;">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>申请人</th>
+                                        <th>设备名</th>
+                                        <th>描述</th>
+                                        <th>状态</th>
+                                        <th>处理时间</th>
+                                        <th>安装令牌</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="history-tbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        
+       
+
+        <div class="footer-note text-center mt-5">
+            <i class="fas fa-robot me-1"></i> 智能巡检已启用 · 每小时自动同步
+        </div>
+    </main>
+
+    <!-- 安装命令 -->
+    <div class="modal fade" id="installCommandModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-download me-2 text-primary"></i>设备安装命令</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="small text-muted mb-2">请在目标设备上执行以下命令：</p>
+                    <div class="bg-light p-3 rounded" style="position: relative;">
+                        <pre id="installCommandText" class="mb-0" style="white-space: pre-wrap; word-break: break-all;"></pre>
+                        <button class="btn btn-sm btn-outline-primary" onclick="copyInstallCommand()">
+                            <i class="fas fa-copy"></i> 复制
+                        </button>
+                    </div>
+                    <p class="small text-muted mt-2">该命令会下载并安装魔盒客户端，自动配置设备。</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+
+    <!-- 新增用户模态框 -->
+    <div class="modal fade" id="addUserModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title"><i class="fas fa-user-plus me-2 text-primary"></i>新增用户</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <form id="addUserForm">
+                        <div class="mb-3"><label for="newUsername" class="form-label">用户名</label><input type="text" class="form-control" id="newUsername" required></div>
+                        <div class="mb-3"><label for="newPassword" class="form-label">密码</label><input type="password" class="form-control" id="newPassword" required></div>
+                        <div class="mb-3"><label for="newDescription" class="form-label">描述</label><input type="text" class="form-control" id="newDescription"></div>
+                    </form>
+                </div>
+                <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button><button type="button" class="btn btn-primary" onclick="saveNewUser()">保存</button></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 修改用户模态框 -->
+    <div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title"><i class="fas fa-user-edit me-2 text-primary"></i>修改用户</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <form id="editUserForm">
+                        <input type="hidden" id="editUsername">
+                        <div class="mb-3"><label for="editPassword" class="form-label">新密码 (留空则不修改)</label><input type="password" class="form-control" id="editPassword"></div>
+                        <div class="mb-3"><label for="editDescription" class="form-label">描述</label><input type="text" class="form-control" id="editDescription"></div>
+                    </form>
+                </div>
+                <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button><button type="button" class="btn btn-primary" onclick="updateUser()">更新</button></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // ---------- 全局变量 ----------
+        const API_BASE = '';   // 空字符串表示同源
+        let currentUser = null; // 存储登录用户信息 
+        let selectedIds = new Set();  // 存储选中的申请ID
+        window.codeCountdown = 0;  // 验证码发送倒计时
+        let currentDeviceForUser = null;  // 当前查看的设备名
+        let loginModal, addUserModal, editUserModal, deviceUserModal;
+
+        // -------- 全局函数----------
+        function closeRegisterModal() {
+            // 关闭注册模态框
+            const registerModalEl = document.getElementById('registerModal');
+            const modalInstance = bootstrap.Modal.getInstance(registerModalEl);
+            if (modalInstance) {
+                modalInstance.hide();
+            } else {
+                // 如果实例不存在，直接使用 bootstrap.Modal 创建并隐藏（保险）
+                new bootstrap.Modal(registerModalEl).hide();
+            }
+            // 显示登录模态框
+            loginModal.show();
+            // 清空注册表单（可选）
+            document.getElementById('registerForm').reset();
+        }
+        
+
+
+        // ---------- 初始化 ----------
+        document.addEventListener('DOMContentLoaded', () => {
+            loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+            addUserModal = new bootstrap.Modal(document.getElementById('addUserModal'));
+            editUserModal = new bootstrap.Modal(document.getElementById('editUserModal'));
+            deviceUserModal = new bootstrap.Modal(document.getElementById('deviceUserModal'));
+
+            // 尝试自动登录
+            const savedUser = localStorage.getItem('mgbox_user');
+            if (savedUser) {
+                try {
+                    currentUser = JSON.parse(savedUser);
+                    // 直接显示主界面
+                    loginModal.hide();
+                    document.getElementById('mainNav').style.display = 'flex';
+                    document.getElementById('mainContent').style.display = 'block';
+                    document.getElementById('loggedUser').innerHTML = `<i class="fas fa-user-circle me-1"></i> ${currentUser.username}`;
+                    
+                    // 根据角色显示/隐藏用户管理标签
+                    if (currentUser.role === 'admin') {
+                        document.getElementById('users-tab').style.display = 'block';
+                        document.getElementById('inspection-tab-item').style.display = 'block';
+                        document.getElementById('application-tab-item').style.display = 'block';
+                        document.getElementById('application-tab-item').style.display = 'block';
+                        document.getElementById('history-tab-item').style.display = 'block';
+                        loadApplicationHistory();
+                        loadUserList();
+                        loadInspectionLogs();
+                        loadDeviceApplications();
+                    } else {
+                        document.getElementById('users-tab').style.display = 'none';
+                        document.getElementById('inspection-tab-item').style.display = 'none';
+                        document.getElementById('application-tab-item').style.display = 'none';
+                        document.getElementById('application-tab-item').style.display = 'none'; 
+                        document.getElementById('devices-tab').click();
+                        document.getElementById('history-tab-item').style.display = 'none';
+                    }
+                    
+                    loadDevices();
+                    loadUserList();   // 如果是管理员会自动加载，普通用户该函数需判断角色（见下文）
+                } catch (e) {
+                    // 解析失败，清除错误的存储
+                    localStorage.removeItem('mgbox_user');
+                }
+            } else {
+                // 没有保存的用户，显示登录框
+                loginModal.show();
+            }
+
+            // 登录表单提交
+            document.getElementById('loginForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const username = document.getElementById('username').value.trim();
+                const password = document.getElementById('password').value.trim();
+                if (!username || !password) {
+                    alert('请输入用户名和密码');
+                    return;
+                }
+
+                try {
+                    const resp = await fetch(API_BASE + '/api/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password })
+                    });
+                    const data = await resp.json();
+                    if (resp.ok) {
+                        currentUser = data;   // { username, role, message }
+                         localStorage.setItem('mgbox_user', JSON.stringify(currentUser)); // 保存到 localStorage
+                         // 首次登录成功后显示新手引导
+                        showTutorialIfFirstTime();
+                        loginModal.hide();
+                        document.getElementById('mainNav').style.display = 'flex';
+                        document.getElementById('mainContent').style.display = 'block';
+                        document.getElementById('loggedUser').innerHTML = `<i class="fas fa-user-circle me-1"></i> ${data.username}`;
+
+                        // 根据角色显示/隐藏用户管理标签
+                        if (data.role === 'admin') {
+                            document.getElementById('users-tab').style.display = 'block';
+                            document.getElementById('inspection-tab-item').style.display = 'block';  // 巡检报告标签
+                            document.getElementById('application-tab-item').style.display = 'block';
+                            document.getElementById('history-tab-item').style.display = 'block'; 
+                            loadUserList();   // 管理员加载用户列表
+                            loadInspectionLogs();   // 加载巡检日志
+                            loadDeviceApplications();
+                            loadApplicationHistory();
+                        } else {
+                            document.getElementById('users-tab').style.display = 'none';
+                            document.getElementById('inspection-tab-item').style.display = 'none'; 
+                            document.getElementById('application-tab-item').style.display = 'none';
+                            document.getElementById('history-tab-item').style.display = 'none';  
+                            // 如果当前在用户面板或巡检面板，切换到设备面板
+                            document.getElementById('devices-tab').click();
+                        }
+                        loadDevices();   // 加载设备列表，自动带上用户名
+                    } else {
+                        alert('登录失败：' + (data.error || '未知错误'));
+                    }
+                } catch (err) {
+                    alert('网络错误：' + err.message);
+                }
+            });
+
+            // 退出登录
+            document.getElementById('logoutBtn').addEventListener('click', function() {
+            // 清除 localStorage
+                localStorage.removeItem('mgbox_user');
+                currentUser = null;
+                document.getElementById('mainNav').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'none';
+                document.getElementById('loginForm').reset();
+                loginModal.show();
+            });
+        });
+
+        // 复制安装命令函数
+        async function copyInstallCommand() {
+            const cmdElement = document.getElementById('installCommandText');
+            if (!cmdElement) {
+                alert('没有可复制的命令');
+                return;
+            }
+
+            // 使用 textContent 获取纯净文本（保留格式但无多余内联样式）
+            const text = cmdElement.textContent.trim();
+
+            if (!text) {
+                alert('命令内容为空');
+                return;
+            }
+
+            try {
+                // 尝试现代 Clipboard API（需要 HTTPS 或 localhost）
+                await navigator.clipboard.writeText(text);
+                alert('✅ 命令已复制到剪贴板');
+            } catch (err) {
+                console.warn('Clipboard API 失败，尝试 execCommand 降级', err);
+                // 降级到 document.execCommand
+                if (fallbackCopy(text)) {
+                    alert('✅ 命令已复制到剪贴板（降级方式）');
+                } else {
+                    alert('❌ 复制失败，请手动选择命令复制：\n\n' + text);
+                }
+            }
+        }
+
+        function fallbackCopy(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.left = '-9999px';
+            textarea.style.top = '0';
+            textarea.setAttribute('readonly', '');
+            document.body.appendChild(textarea);
+
+            textarea.select();
+            textarea.setSelectionRange(0, textarea.value.length); // 兼容移动端
+
+            try {
+                return document.execCommand('copy');
+            } catch (err) {
+                console.error('execCommand 复制出错', err);
+                return false;
+            } finally {
+                document.body.removeChild(textarea);
+            }
+        }
+        // -------- 历史记录 ---------
+        async function loadApplicationHistory() {
+            if (!currentUser || currentUser.role !== 'admin') return;
+            try {
+                const resp = await fetch(API_BASE + '/api/device_applications/history');
+                if (!resp.ok) throw new Error('加载历史失败');
+                const history = await resp.json();
+                const tbody = document.getElementById('history-tbody');
+                tbody.innerHTML = '';
+                if (history.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center">暂无历史记录</td></tr>';
+                    return;
+                }
+                history.forEach(h => {
+                    const statusBadge = h.status === 'approved' 
+                        ? '<span class="badge bg-success">已批准</span>'
+                        : '<span class="badge bg-danger">已拒绝</span>';
+                    const tokenDisplay = h.install_token ? `<code>${h.install_token}</code>` : '-';
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${h.username}</td>
+                            <td>${h.device_name}</td>
+                            <td>${h.description || '-'}</td>
+                            <td>${statusBadge}</td>
+                            <td>${h.processed_at || '-'}</td>
+                            <td>${tokenDisplay}</td>
+                        </tr>
+                    `;
+                });
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // ---------- 设备管理（从后端获取）----------
+        async function loadDevices() {
+            try {
+                let url = API_BASE + '/api/devices';
+                if (currentUser.role === 'admin') {
+                    url += '?all=true';
+                } else {
+                    url += `?username=${currentUser.username}`;
+                }
+                const resp = await fetch(url);
+                if (!resp.ok) throw new Error('获取设备列表失败');
+                const devices = await resp.json();
+
+                document.getElementById('total-devices').innerText = devices.length;
+                const onlineCount = devices.filter(d => d.online).length;
+                document.getElementById('online-devices').innerText = onlineCount;
+                document.getElementById('expiring-keys').innerHTML = '<span class="text-warning">' + onlineCount + '</span>';
+
+                const tbody = document.getElementById('device-tbody');
+                tbody.innerHTML = '';
+                if (devices.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">暂无设备</td></tr>';
+                    return;
+                }
+                devices.forEach(dev => {
+                    const statusClass = dev.online ? 'badge-online' : 'badge-offline';
+                    const statusText = dev.online ? '在线' : '离线';
+                    const lastAccess = dev.last_access || '从未';
+                    // 操作按钮：查看用户、安装命令、编辑、删除
+                    let actionButtons = `
+                        <button class="btn btn-view me-2" onclick="showDeviceUsers('${dev.device_name}')">
+                            <i class="fas fa-eye"></i> 查看用户
+                        </button>
+                        <button class="btn btn-info btn-view me-2" onclick="showInstallCommand('${dev.device_name}')">
+                            <i class="fas fa-download"></i> 安装命令
+                        </button>
+                    `;
+                    // 如果是设备所有者（普通用户自己的设备）或管理员，显示编辑和删除按钮
+                    if (currentUser.role === 'admin' || (currentUser.role !== 'admin' && dev.owner === currentUser.username)) {
+                        actionButtons += `
+                            <button class="btn btn-warning btn-view me-2" onclick="editDevice('${dev.device_name}', '${dev.description}')">
+                                <i class="fas fa-edit"></i> 编辑
+                            </button>
+                            <button class="btn btn-danger btn-view" onclick="deleteDevice('${dev.device_name}')">
+                                <i class="fas fa-trash"></i> 删除
+                            </button>
+                            <button class="btn btn-danger btn-view" onclick="openShellWindow('${dev.device_name}')">
+                                <i class="fas fa-trash"></i> 打开Shell
+                            </button>
+                        `;
+                    }
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><i class="fas fa-microchip me-2 text-secondary"></i>${dev.device_name}</td>
+                            <td>${dev.description || '—'}</td>
+                            <td><span class="badge ${statusClass}"><i class="fas fa-circle me-1" style="font-size: 0.5rem;"></i>${statusText}</span></td>
+                            <td><span class="text-muted small">${lastAccess}</span></td>
+                            <td>${actionButtons}</td>
+                        </tr>
+                    `;
+                });
+            } catch (err) {
+                console.error(err);
+                document.getElementById('device-tbody').innerHTML = `<tr><td colspan="5" class="text-center text-danger">加载失败：${err.message}</td></tr>`;
+            }
+
+            
+        }
+
+        // 查看设备用户
+        async function showDeviceUsers(deviceName) {
+            currentDeviceForUser = deviceName;  // 保存
+            try {
+                const resp = await fetch(API_BASE + `/api/device/${deviceName}/users?username=${currentUser.username}`);
+                if (!resp.ok) throw new Error('获取用户失败');
+                const users = await resp.json();
+
+                document.getElementById('modalDeviceName').innerText = deviceName;
+                const tbody = document.getElementById('deviceUserTbody');
+                tbody.innerHTML = '';
+                if (users.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center">暂无用户</td></tr>';
+                } else {
+                    users.forEach(u => {
+                        // 每行添加操作按钮（仅当有权限时，这里简单认为登录用户就是设备所有者或管理员，所以都显示）
+                        const actions = `
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="editDeviceUser('${deviceName}', '${u.device_user}')">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-success me-1" onclick="refreshDeviceUser('${deviceName}', '${u.device_user}')">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                            <button class="btn btn-sm btn-soft-danger" onclick="deleteDeviceUser('${deviceName}', '${u.device_user}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            
+                        `;
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${u.device_user}</td>
+                                <td><code>${u.passtext}</code></td>
+                                <td>${u.last_modified || '-'}</td>
+                                <td>${u.description || '-'}</td>
+                                <td>${actions}</td>
+                            </tr>
+                        `;
+                    });
+                }
+                // 根据角色决定是否显示新增按钮（管理员或普通用户均可，但普通用户只能操作自己的设备，我们已经通过权限控制了）
+                // 此处直接显示按钮，权限由后端保证。
+                deviceUserModal.show();
+            } catch (err) {
+                alert(err.message);
+            }
+        }
+
+        // ---------- 用户管理 ---------
+        async function loadUserList() {
+            if (!currentUser || currentUser.role !== 'admin') {
+                document.getElementById('user-list-tbody').innerHTML = '<tr><td colspan="6" class="text-center">仅管理员可见</td></tr>';
+                return;
+            }
+
+            try {
+                const resp = await fetch(API_BASE + '/api/users');
+                if (!resp.ok) throw new Error('获取用户列表失败');
+                const users = await resp.json();
+                const tbody = document.getElementById('user-list-tbody');
+                tbody.innerHTML = '';
+                users.forEach(u => {
+                    let actionButtons = '';
+                    if (currentUser.username === 'admin') {
+                        // 超级管理员
+                        actionButtons = `
+                            ${u.username !== 'admin' ? `
+                                <button class="btn btn-sm btn-outline-warning me-2" onclick="toggleRole('${u.username}', '${u.role}')">
+                                    <i class="fas fa-sync-alt"></i> 设为${u.role === 'admin' ? '普通用户' : '管理员'}
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteUser('${u.username}')"><i class="fas fa-trash"></i> 删除</button>
+                            ` : ''}
+                        `;
+                    } else {
+                        // 普通管理员
+                        actionButtons = `
+                            ${u.username !== 'admin' ? `
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteUser('${u.username}')"><i class="fas fa-trash"></i> 删除</button>
+                            ` : ''}
+                        `;
+                    }
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><i class="fas fa-user-circle me-2"></i>${u.username}</td>
+                            <td>${u.email || '-'}</td>
+                            <td><span class="badge ${u.role === 'admin' ? 'bg-primary' : 'bg-secondary'}">${u.role}</span></td>
+                            <td>${u.created_at || '-'}</td>
+                            <td>${u.last_modified || '-'}</td>
+                            <td>${actionButtons}</td>
+                        </tr>
+                    `;
+                });
+
+                if (currentUser.username !== 'admin') {
+                    const addBtn = document.querySelector('#users .btn-primary');
+                    if (addBtn) addBtn.style.display = 'none';
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function saveNewUser() {
+            const username = document.getElementById('newUsername').value.trim();
+            const password = document.getElementById('newPassword').value.trim();
+            if (!username || !password) { alert('用户名和密码不能为空'); return; }
+            try {
+                const resp = await fetch(API_BASE + '/api/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                if (resp.ok) {
+                    alert('用户创建成功');
+                    addUserModal.hide();
+                    document.getElementById('addUserForm').reset();
+                    loadUserList();
+                } else {
+                    const err = await resp.json();
+                    alert('创建失败：' + (err.error || '未知错误'));
+                }
+            } catch (err) {
+                alert('网络错误');
+            }
+        }
+
+        function editUser(username) {
+            document.getElementById('editUsername').value = username;
+            document.getElementById('editPassword').value = '';
+            editUserModal.show();
+        }
+
+        async function updateUser() {
+            const username = document.getElementById('editUsername').value;
+            const newPass = document.getElementById('editPassword').value.trim();
+            if (!newPass) { alert('密码不能为空'); return; }
+            try {
+                const resp = await fetch(API_BASE + '/api/users/' + username, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: newPass })
+                });
+                if (resp.ok) {
+                    alert('密码修改成功');
+                    editUserModal.hide();
+                    document.getElementById('editUserForm').reset();
+                    loadUserList();
+                } else {
+                    const err = await resp.json();
+                    alert('修改失败：' + (err.error || '未知错误'));
+                }
+            } catch (err) {
+                alert('网络错误');
+            }
+        }
+
+        async function deleteUser(username) {
+            if (!confirm('确定删除用户 ' + username + ' 吗？')) return;
+            try {
+                const resp = await fetch(API_BASE + '/api/users/' + username, {
+                    method: 'DELETE'
+                });
+                if (resp.ok) {
+                    alert('用户已删除');
+                    loadUserList();
+                } else {
+                    const err = await resp.json();
+                    alert('删除失败：' + (err.error || '未知错误'));
+                }
+            } catch (err) {
+                alert('网络错误');
+            }
+        }
+        
+        // --- 切换角色 ---
+        async function toggleRole(username, currentRole) {
+            const newRole = currentRole === 'admin' ? 'user' : 'admin';
+            if (!confirm(`确定将用户 ${username} 设为 ${newRole} 吗？`)) return;
+            try {
+                const resp = await fetch(API_BASE + `/api/users/${username}/role`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ role: newRole })
+                });
+                if (resp.ok) {
+                    alert('角色更新成功');
+                    loadUserList();
+                } else {
+                    const err = await resp.json();
+                    alert('更新失败：' + (err.error || '未知错误'));
+                }
+            } catch (err) {
+                alert('网络错误');
+            }
+        }
+        
+        // 加载巡检日志
+        async function loadInspectionLogs() {
+            // 只有管理员才能查看
+            if (!currentUser || currentUser.role !== 'admin') {
+                document.getElementById('inspection-tbody').innerHTML = '<tr><td colspan="5" class="text-center">仅管理员可见</td></tr>';
+                return;
+            }
+
+            try {
+                const resp = await fetch(API_BASE + '/api/inspection_logs');
+                if (!resp.ok) throw new Error('获取巡检日志失败');
+                const logs = await resp.json();
+
+                const tbody = document.getElementById('inspection-tbody');
+                tbody.innerHTML = '';
+                if (logs.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">暂无巡检记录</td></tr>';
+                    return;
+                }
+
+                logs.forEach(log => {
+                    // 状态徽章
+                    const statusBadge = log.status === 'success' 
+                        ? '<span class="badge-success"><i class="fas fa-check-circle me-1"></i>成功</span>'
+                        : '<span class="badge-danger"><i class="fas fa-exclamation-circle me-1"></i>失败</span>';
+
+                    // AI 建议列，如果没有则显示“-”
+                    const aiAdvice = log.ai_advice || '-';
+
+                    const row = `<tr>
+                        <td><i class="fas fa-microchip me-2 text-secondary"></i>${log.device_name}</td>
+                        <td>${statusBadge}</td>
+                        <td>${log.message || '-'}</td>
+                        <td><small>${aiAdvice}</small></td>
+                        <td>${log.created_at || '-'}</td>
+                    </tr>`;
+                    tbody.innerHTML += row;
+                });
+            } catch (err) {
+                console.error(err);
+                document.getElementById('inspection-tbody').innerHTML = `<tr><td colspan="5" class="text-center text-danger">加载失败：${err.message}</td></tr>`;
+            }
+        } 
+        // 新手引导：首次登录时显示
+        function showTutorialIfFirstTime() {
+            const tutorialShown = localStorage.getItem('mgbox_tutorial_shown');
+            if (!tutorialShown) {
+                const tutorialModal = new bootstrap.Modal(document.getElementById('tutorialModal'));
+                tutorialModal.show();
+                localStorage.setItem('mgbox_tutorial_shown', 'true');
+            }
+        }
+
+       // 发送验证码
+        function sendVerificationCode() {
+            const email = document.getElementById('regEmail').value.trim();
+            if (!email) {
+                alert('请先输入邮箱');
+                return;
+            }
+            
+            // 邮箱格式验证
+            if (!email.includes('@') || !email.includes('.')) {
+                alert('请输入有效的邮箱地址');
+                return;
+            }
+            
+            if (window.codeCountdown > 0) return;
+            const btn = document.getElementById('sendCodeBtn');
+            const btnText = document.getElementById('codeBtnText');
+            
+            
+            fetch(API_BASE + '/api/send_code', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.error || '发送失败');
+                    }).catch(() => {
+                        throw new Error('发送失败，请稍后重试');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert('验证码已发送，请查收邮件');
+                
+                // 倒计时
+                window.codeCountdown = 60;
+                btn.disabled = true;
+                
+                const timer = setInterval(() => {
+                    window.codeCountdown--;
+                    btnText.innerText = `${window.codeCountdown}秒后重试`;
+                    
+                    if (window.codeCountdown <= 0) {
+                        clearInterval(timer);
+                        btn.disabled = false;
+                        btnText.innerText = '获取验证码';
+                        window.codeCountdown = 0;
+                    }
+                }, 1000);
+            })
+            .catch(error => {
+                alert(error.message);  // 显示具体的错误信息
+                btn.disabled = false;
+                btnText.innerText = '获取验证码';
+                window.codeCountdown = 0;
+            });
+        }
+                // 带验证码的注册
+                async function registerWithCode() {
+                    const username = document.getElementById('regUsername').value.trim();
+                    const email = document.getElementById('regEmail').value.trim();
+                    const password = document.getElementById('regPassword').value.trim();
+                    const code = document.getElementById('regCode').value.trim();
+                    
+                    if (!username || !email || !password || !code) {
+                        alert('所有字段都不能为空');
+                        return;
+                    }
+                    
+                    try {
+                        const resp = await fetch(API_BASE + '/api/register_with_code', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ username, email, password, code })
+                        });
+                        const data = await resp.json();
+                        if (resp.ok) {
+                            alert('注册成功，请登录');
+                            closeRegisterModal();
+                            loginModal.show();
+                            // 自动填充用户名
+                            document.getElementById('username').value = username;
+                        } else {
+                            alert('注册失败：' + (data.error || '未知错误'));
+                        }
+                    } catch (err) {
+                        alert('网络错误');
+                    }
+                }
+
+    function showApplyDeviceModal() {
+    new bootstrap.Modal(document.getElementById('applyDeviceModal')).show();
+}
+                // 管理员审批
+                async function submitDeviceApplication() {
+                    const deviceName = document.getElementById('applyDeviceName').value.trim();
+                    const description = document.getElementById('applyDeviceDesc').value.trim();
+                    if (!deviceName) {
+                        alert('设备名不能为空');
+                        return;
+                    }
+                    try {
+                        const resp = await fetch(API_BASE + '/api/device_apply', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                username: currentUser.username,
+                                device_name: deviceName,
+                                description: description
+                            })
+                        });
+                        const data = await resp.json();
+                        if (resp.ok) {
+                            alert('申请已提交，请等待管理员审批');
+                            bootstrap.Modal.getInstance(document.getElementById('applyDeviceModal')).hide();
+                            document.getElementById('applyDeviceForm').reset();
+                        } else {
+                            alert('提交失败：' + (data.error || '未知错误'));
+                        }
+                    } catch (err) {
+                        alert('网络错误');
+                    }
+                }
+
+                async function loadDeviceApplications() {
+                    if (!currentUser || currentUser.role !== 'admin') return;
+                    try {
+                        const resp = await fetch(API_BASE + '/api/device_applications');
+                        if (!resp.ok) throw new Error('加载失败');
+                        const apps = await resp.json();
+                        const tbody = document.getElementById('application-tbody');
+                        tbody.innerHTML = '';
+                        apps.forEach(a => {
+                            const statusBadge = a.status === 'pending' ? '<span class="badge bg-warning">待审批</span>' :
+                                                a.status === 'approved' ? '<span class="badge bg-success">已批准</span>' :
+                                                '<span class="badge bg-danger">已拒绝</span>';
+                            let actionBtns = '';
+                            if (a.status === 'pending') {
+                                actionBtns = `
+                                    <button class="btn btn-sm btn-success me-2" onclick="approveApplication(${a.id})">批准</button>
+                                    <button class="btn btn-sm btn-danger" onclick="rejectApplication(${a.id})">拒绝</button>
+                                `;
+                            } else if (a.status === 'approved') {
+                                actionBtns = `<span class="small"><code>${a.install_token}</code></span>`;
+                            } else {
+                                actionBtns = '-';
+                            }
+                            tbody.innerHTML += `
+                                <tr>
+                                    <td><input type="checkbox" class="app-checkbox" value="${a.id}" onchange="handleCheckboxChange(this)"></td>
+                                    <td>${a.username}</td>
+                                    <td>${a.device_name}</td>
+                                    <td>${a.description || '-'}</td>
+                                    <td>${a.created_at || '-'}</td>
+                                    <td>${statusBadge}</td>
+                                    <td>${actionBtns}</td>
+                                </tr>
+                            `;
+                        });
+                    } catch (err) {
+                        console.error(err);
+                    }
+                }
+
+                async function batchApproveSelected() {
+                    if (selectedIds.size === 0) {
+                        alert('请至少选择一条申请');
+                        return;
+                    }
+                    if (!confirm(`确定批准选中的 ${selectedIds.size} 条申请吗？`)) return;
+                    try {
+                        const resp = await fetch(API_BASE + '/api/device_applications/batch_approve', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ ids: Array.from(selectedIds) })
+                        });
+                        const data = await resp.json();
+                        if (resp.ok) {
+                            alert('批量批准成功');
+                            selectedIds.clear();
+                            document.getElementById('select-all').checked = false;
+                            loadDeviceApplications();
+                            loadDevices();
+                        } else {
+                            alert('操作失败：' + (data.error || '未知错误'));
+                        }
+                    } catch (err) {
+                        alert('网络错误');
+                    }
+                }
+
+                function toggleSelectAll() {
+                    const checkboxes = document.querySelectorAll('.app-checkbox');
+                    const selectAll = document.getElementById('select-all');
+                    checkboxes.forEach(cb => {
+                        cb.checked = selectAll.checked;
+                        if (selectAll.checked) {
+                            selectedIds.add(parseInt(cb.value));
+                        } else {
+                            selectedIds.delete(parseInt(cb.value));
+                        }
+                    });
+                    document.getElementById('selected-count').innerText = selectedIds.size;
+                }
+
+                function handleCheckboxChange(cb) {
+                    const id = parseInt(cb.value);
+                    if (cb.checked) {
+                        selectedIds.add(id);
+                    } else {
+                        selectedIds.delete(id);
+                    }
+                    document.getElementById('selected-count').innerText = selectedIds.size;
+                }
+
+                async function approveApplication(appId) {
+                    if (!confirm('确定批准该申请吗？')) return;
+                    try {
+                        const resp = await fetch(API_BASE + `/api/device_applications/${appId}/approve`, { method: 'POST' });
+                        if (resp.ok) {
+                            alert('已批准');
+                            loadDeviceApplications();
+                            loadDevices();  // 刷新设备列表，新设备应该出现
+                        } else {
+                            const err = await resp.json();
+                            alert('操作失败：' + (err.error || '未知错误'));
+                        }
+                    } catch (err) {
+                        alert('网络错误');
+                    }
+                }
+
+                async function rejectApplication(appId) {
+                    if (!confirm('确定拒绝该申请吗？')) return;
+                    try {
+                        const resp = await fetch(API_BASE + `/api/device_applications/${appId}/reject`, { method: 'POST' });
+                        if (resp.ok) {
+                            alert('已拒绝');
+                            loadDeviceApplications();
+                        } else {
+                            const err = await resp.json();
+                            alert('操作失败：' + (err.error || '未知错误'));
+                        }
+                    } catch (err) {
+                        alert('网络错误');
+                    }
+                }
+
+                async function showInstallCommand(deviceName) {
+                    try {
+                        const resp = await fetch(API_BASE + `/api/device/${deviceName}/install_command?username=${currentUser.username}`);
+                        if (!resp.ok) throw new Error('获取安装命令失败');
+                        const data = await resp.json();
+                        
+                        // 将命令文本填入模态框
+                        document.getElementById('installCommandText').innerText = data.command;
+                        
+                        // 显示模态框
+                        new bootstrap.Modal(document.getElementById('installCommandModal')).show();
+                    } catch (err) {
+                        alert(err.message);
+                    }
+                }
+
+                // 编辑设备描述
+                function editDevice(deviceName, currentDesc) {
+                    document.getElementById('editDeviceName').value = deviceName;
+                    document.getElementById('editDeviceDesc').value = currentDesc || '';
+                    new bootstrap.Modal(document.getElementById('editDeviceModal')).show();
+                }
+
+                // 提交设备描述修改
+                async function updateDevice() {
+                    const deviceName = document.getElementById('editDeviceName').value;
+                    const newDesc = document.getElementById('editDeviceDesc').value.trim();
+                    if (!deviceName) return;
+                    try {
+                        const resp = await fetch(API_BASE + `/api/devices/${deviceName}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                username: currentUser.username,
+                                description: newDesc
+                            })
+                        });
+                        const data = await resp.json();
+                        if (resp.ok) {
+                            alert('设备描述已更新');
+                            bootstrap.Modal.getInstance(document.getElementById('editDeviceModal')).hide();
+                            loadDevices();
+                        } else {
+                            alert('更新失败：' + (data.error || '未知错误'));
+                        }
+                    } catch (err) {
+                        alert('网络错误');
+                    }
+                }
+
+                // 删除设备
+                async function deleteDevice(deviceName) {
+                    if (!confirm(`确定删除设备 ${deviceName} 吗？此操作不可恢复。`)) return;
+                    try {
+                        const resp = await fetch(API_BASE + `/api/devices/${deviceName}?username=${currentUser.username}`, {
+                            method: 'DELETE'
+                        });
+                        const data = await resp.json();
+                        if (resp.ok) {
+                            alert('设备已删除');
+                            loadDevices();
+                        } else {
+                            alert('删除失败：' + (data.error || '未知错误'));
+                        }
+                    } catch (err) {
+                        alert('网络错误');
+                    }
+                }
+            function openShellWindow(deviceName) {
+               window.open("http://shell.mgbox.nulabs.cn/" + deviceName + "/", '_blank'); 
+            }
+            function addDeviceUser() {
+                document.getElementById('addDeviceUserForm').reset();
+                new bootstrap.Modal(document.getElementById('addDeviceUserModal')).show();
+            }
+
+            async function saveDeviceUser() {
+                const deviceUser = document.getElementById('newDeviceUser').value.trim();
+                const desc = document.getElementById('newDeviceUserDesc').value.trim();
+                if (!deviceUser) { alert('用户名不能为空'); return; }
+                try {
+                    const resp = await fetch(API_BASE + `/api/device/${currentDeviceForUser}/users`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            username: currentUser.username,
+                            device_user: deviceUser,
+                            description: desc
+                        })
+                    });
+                    const data = await resp.json();
+                    if (resp.ok) {
+                        alert('创建成功');
+                        bootstrap.Modal.getInstance(document.getElementById('addDeviceUserModal')).hide();
+                        showDeviceUsers(currentDeviceForUser);  // 刷新列表
+                    } else {
+                        alert('创建失败：' + (data.error || '未知错误'));
+                    }
+                } catch (err) {
+                    alert('网络错误');
+                }
+            }
+
+            // 编辑设备用户描述
+            function editDeviceUser(deviceName, deviceUser) {
+                const newDesc = prompt(`请输入用户 ${deviceUser} 的新描述:`);
+                if (newDesc === null) return;
+
+                fetch(API_BASE + `/api/device/${deviceName}/users/${deviceUser}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: currentUser.username, description: newDesc })
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json().then(data => {
+                            alert('描述已更新');
+                            showDeviceUsers(deviceName);
+                        });
+                    } else {
+                        return response.json().then(data => {
+                            alert('更新失败：' + (data.error || '未知错误'));
+                        });
+                    }
+                })
+                .catch(err => {
+                    alert('网络错误：' + err.message);
+                });
+            }
+            async function refreshDeviceUser(deviceName, deviceUser) {
+                if (!confirm(`确定刷新用户 ${deviceUser} 的密码吗？`)) return;
+                try {
+                    const resp = await fetch(API_BASE + `/api/device/${deviceName}/users/${deviceUser}/refresh?username=${currentUser.username}`, {
+                        method: 'POST'
+                    });
+                    const data = await resp.json();
+                    if (resp.ok) {
+                        alert('密码已刷新');
+                        showDeviceUsers(deviceName);
+                    } else {
+                        alert('刷新失败：' + (data.error || '未知错误'));
+                    }
+                } catch (err) {
+                    alert('网络错误');
+                }
+            }
+
+            async function deleteDeviceUser(deviceName, deviceUser) {
+                if (!confirm(`确定删除用户 ${deviceUser} 吗？`)) return;
+                try {
+                    const resp = await fetch(API_BASE + `/api/device/${deviceName}/users/${deviceUser}?username=${currentUser.username}`, {
+                        method: 'DELETE'
+                    });
+                    const data = await resp.json();
+                    if (resp.ok) {
+                        alert('已删除');
+                        showDeviceUsers(deviceName);
+                    } else {
+                        alert('删除失败：' + (data.error || '未知错误'));
+                    }
+                } catch (err) {
+                    alert('网络错误');
+                }
+            }
+    </script>
+    
+    <!-- 设备用户模态框 -->
+    <div class="modal fade" id="deviceUserModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-users me-2 text-primary"></i><span id="modalDeviceName"></span> 的用户密码</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-sm table-bordered">
+                        <thead><tr><th>用户名</th><th>密码</th><th>最后修改</th><th>描述</th><th>操作</th></tr></thead>
+                        <tbody id="deviceUserTbody"></tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
