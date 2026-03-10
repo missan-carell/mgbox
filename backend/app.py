@@ -32,7 +32,7 @@ app.config['MAIL_PORT'] = 465
 app.config['MAIL_USE_SSL'] = True
 app.config['MAIL_USERNAME'] = os.getenv('MAIL_PASSWORD', '')
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD', '')
-app.config['MAIL_DEFAULT_SENDER'] = '2587078474@qq.com'
+app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_SERVER', '')
 
 # 初始化邮件
 mail = Mail(app)

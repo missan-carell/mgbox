@@ -15,7 +15,7 @@ DB_CONFIG = {
     'cursorclass': pymysql.cursors.DictCursor
 }
 
-DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY', 'sk-2ea9f1f5ae384e16b682fa0b37e5a2c2')
+DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY')
 DEEPSEEK_URL = 'https://api.deepseek.com/v1/chat/completions'
 
 # 巡检间隔（秒）
