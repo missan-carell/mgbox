@@ -37,7 +37,7 @@ app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_SERVER', '')
 # 初始化邮件
 mail = Mail(app)
 
-# 导入自定义邮件工具（此时 app 和 mail 已就绪）
+# 导入自定义邮件工具
 from email_utils import send_verification_code, generate_verification_code
 
 # 内存存储验证码（生产环境建议用 Redis）
@@ -77,6 +77,14 @@ def strftime_local(dt, fmt='%Y-%m-%d %H:%M:%S'):
     local_dt = utc_to_local(dt)
     return local_dt.strftime(fmt)
 # =================================================
+
+# --------------获取服务器地址----------
+@app.route('/api/mgbox/server', methods=['GET'])
+def get_mgbox_server_address():
+    """
+    从配置文件获取魔盒服务器地址
+    """
+    return jsonify({'address': os.getenv('MGBOX_SERVER_ADDRESS')})
 
 # ------------------- 发送验证码接口 -------------------
 @app.route('/api/send_code', methods=['POST'])

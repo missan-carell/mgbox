@@ -242,6 +242,18 @@
             color: #cd5c5c;
         }
 
+         /* 打开shell */
+        .btn-shell {
+            background-color: #f1ffdb;
+            border-color: #c3faba;
+            color: #217a3c;
+        }
+        /* .btn-shell:hover {
+            background-color: #f5ffdf;
+            border-color: #c1f5b9;
+            color: #0b3a19;
+        }        */
+
         /* 安装命令按钮 */
         .btn-info {
             background-color: #e6f7ff;
@@ -1068,8 +1080,8 @@
                             <button class="btn btn-danger btn-view" onclick="deleteDevice('${dev.device_name}')">
                                 <i class="fas fa-trash"></i> 删除
                             </button>
-                            <button class="btn btn-danger btn-view" onclick="openShellWindow('${dev.device_name}')">
-                                <i class="fas fa-trash"></i> 打开Shell
+                            <button class="btn btn-shell btn-view" onclick="openShellWindow('${dev.device_name}')">
+                                <i class="fas fa-terminal"></i> 打开Shell
                             </button>
                         `;
                     }
@@ -1659,9 +1671,35 @@
                         alert('网络错误');
                     }
                 }
+                
             function openShellWindow(deviceName) {
-               window.open("http://shell.mgbox.nulabs.cn/" + deviceName + "/", '_blank'); 
+                fetch(API_BASE + '/api/mgbox/server', { method: 'GET' })
+                    .then(response => {
+                        if (!response.ok) {
+                            // 尝试解析错误信息，如果解析失败则抛出通用错误
+                            return response.json().then(data => {
+                                throw new Error(data.error || '获取服务器地址失败');
+                            }).catch(() => {
+                                throw new Error('获取服务器地址失败，请稍后重试');
+                            });
+                        }
+                        return response.json();   // 关键：返回解析后的 Promise
+                    })
+                    .then(data => {
+                        // 现在 data 就是真正的服务器地址对象
+                        if (data && data.address) {
+                            window.open("http://" + data.address + "/" + deviceName + "/", '_blank');
+                        } else {
+                            throw new Error('服务器返回的地址无效');
+                        }
+                    })
+                    .catch(error => {
+                        // 统一处理错误，例如弹窗提示
+                        console.error(error);
+                        alert(error.message);   // 或者使用更友好的 UI 提示
+                    });
             }
+
             function addDeviceUser() {
                 document.getElementById('addDeviceUserForm').reset();
                 new bootstrap.Modal(document.getElementById('addDeviceUserModal')).show();
@@ -1762,7 +1800,12 @@
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-users me-2 text-primary"></i><span id="modalDeviceName"></span> 的用户密码</h5>
+                    <h5 class="modal-title">
+                        <i class="fas fa-users me-2 text-primary"></i><span id="modalDeviceName"></span> 的用户密码
+                        <button class="btn btn-sm btn-primary ms-3" id="addDeviceUserBtn" style="display: none;" onclick="addDeviceUser()">
+                            <i class="fas fa-plus-circle"></i> 新增虚拟机用户
+                        </button>
+                    </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">

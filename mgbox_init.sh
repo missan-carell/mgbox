@@ -51,13 +51,18 @@ else
     CREATE TABLE IF NOT EXISTS `user` (
         `userid` INT AUTO_INCREMENT PRIMARY KEY,
         `username` VARCHAR(50) NOT NULL UNIQUE,
+        `email` varchar(100) DEFAULT NULL UNIQUE,
         `password_hash` CHAR(128) NOT NULL,
+        `verification_code` varchar(6) DEFAULT NULL,
+        `code_expires_at` timestamp NULL DEFAULT NULL,
+        `is_verified` tinyint(1) DEFAULT 0,
+        `role` enum('admin','user') NOT NULL DEFAULT 'user',
         `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         `last_modified` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
 
     -- Add Test users
-    INSERT IGNORE INTO `user` (username, password_hash) VALUES ('admin', SHA2('admin', 256));
+    INSERT IGNORE INTO `user` (username, role, password_hash) VALUES ('admin', 'admin', SHA2('admin', 256));
     INSERT IGNORE INTO `user` (username, password_hash) VALUES ('test1', SHA2('test1', 256));
     INSERT IGNORE INTO `user` (username, password_hash) VALUES ('test2', SHA2('test2', 256));
 
@@ -141,6 +146,45 @@ else
     -- Create Indexes 
     CREATE UNIQUE INDEX `device_index` ON `device` (`userid`, `device_name`);
     CREATE UNIQUE INDEX `device_user_index` ON `device_user` (`device_id`, `device_user`);
+
+
+    CREATE TABLE `device_application` (
+        `id` int(11) NOT NULL AUTO_INCREMENT,
+        `userid` int(11) NOT NULL,
+        `device_name` varchar(50) NOT NULL,
+        `description` varchar(128) NOT NULL DEFAULT '',
+        `status` enum('pending','approved','rejected') DEFAULT 'pending',
+        `install_token` varchar(24) DEFAULT NULL,
+        `created_at` timestamp NULL DEFAULT current_timestamp(),
+        `processed_at` timestamp NULL DEFAULT NULL,
+        PRIMARY KEY (`id`),
+        UNIQUE KEY `uniq_user_device` (`userid`,`device_name`),
+        CONSTRAINT `1` FOREIGN KEY (`userid`) REFERENCES `user` (`userid`) ON DELETE CASCADE
+    ) CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+
+    CREATE TABLE `device_application_history` (
+        `id` int(11) NOT NULL AUTO_INCREMENT,
+        `userid` int(11) NOT NULL,
+        `username` varchar(50) NOT NULL,
+        `device_name` varchar(50) NOT NULL,
+        `description` varchar(128) DEFAULT '',
+        `status` enum('approved','rejected') NOT NULL,
+        `install_token` varchar(24) DEFAULT NULL,
+        `processed_at` timestamp NULL DEFAULT current_timestamp(),
+        PRIMARY KEY (`id`),
+        KEY `idx_processed_at` (`processed_at`)
+    )DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+
+    CREATE TABLE `inspection_log` (
+        `id` int(11) NOT NULL AUTO_INCREMENT,
+        `device_name` varchar(50) NOT NULL,
+        `status` enum('success','failure') NOT NULL,
+        `message` text DEFAULT NULL,
+        `ai_advice` text DEFAULT NULL,
+        `created_at` timestamp NULL DEFAULT current_timestamp(),
+        PRIMARY KEY (`id`)
+    ) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+
 EOF
   [ $? != 0 ] && logerr "Prepare database failed." && exit 1
 fi
