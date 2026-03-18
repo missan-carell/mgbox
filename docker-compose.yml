@@ -111,9 +111,9 @@ services:
       - DB_PASS=${DB_PASSWORD}
       - DB_NAME=mgbox
       - MGBOX_SERVER_ADDRESS=${MGBOX_SERVER_ADDRESS}
+      - MAIL_SERVER=${MAIL_SERVER}
       - MAIL_USERNAME=${MAIL_USERNAME}
       - MAIL_PASSWORD=${MAIL_PASSWORD}
-      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
     volumes:
       #- ./backend:/app/backend
       - ./backend:/app/
