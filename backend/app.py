@@ -30,9 +30,13 @@ DB_NAME = os.getenv('DB_NAME', 'mgbox')
 app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', '')
 app.config['MAIL_PORT'] = 465
 app.config['MAIL_USE_SSL'] = True
-app.config['MAIL_USERNAME'] = os.getenv('MAIL_PASSWORD', '')
+app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME', '')
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD', '')
 app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_SERVER', '')
+
+app.logger.debug(f"MAIL_SERVER:  {app.config['MAIL_SERVER']}") # 测试用，测试完删除
+app.logger.debug(f"MAIL_USERNAME:  {app.config['MAIL_USERNAME']}") # 测试用，测试完删除
+app.logger.debug(f"MAIL_PASSWORD:  {app.config['MAIL_PASSWORD'][:3]}****")  # 只打印前4位
 
 # 初始化邮件
 mail = Mail(app)
